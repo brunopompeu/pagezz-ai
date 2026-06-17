@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hero Opção A — Autoridade 50/50</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #0A0A0A; -webkit-font-smoothing: antialiased; }
+
+    /* ── TOPO: logo/nome ── */
+    .topbar {
+      background: #0A0A0A;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 18px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .topbar-nome {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.02em;
+    }
+    .topbar-cta {
+      font-size: 13px;
+      color: #C9A84C;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid rgba(201,168,76,0.4);
+      padding: 8px 20px;
+      border-radius: 100px;
+      transition: background 0.2s;
+    }
+    .topbar-cta:hover { background: rgba(201,168,76,0.1); }
+
+    /* ── HERO 50/50 ── */
+    .hero {
+      min-height: 620px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      max-width: 1100px;
+      margin: 0 auto;
+      align-items: stretch;
+    }
+
+    /* Lado esquerdo */
+    .hero-content {
+      padding: 72px 56px 72px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-right: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #C9A84C;
+      margin-bottom: 28px;
+    }
+    .hero-tag::before {
+      content: '';
+      display: block;
+      width: 28px;
+      height: 1px;
+      background: #C9A84C;
+    }
+
+    .hero-content h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 3vw, 2.8rem);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1.12;
+      margin-bottom: 24px;
+    }
+    .hero-content h1 em {
+      font-style: italic;
+      color: #C9A84C;
+    }
+
+    .hero-divider {
+      width: 48px;
+      height: 2px;
+      background: #C9A84C;
+      margin-bottom: 24px;
+    }
+
+    .hero-sub {
+      font-size: 1rem;
+      color: #888;
+      line-height: 1.7;
+      margin-bottom: 40px;
+    }
+
+    /* Números de resultado */
+    .hero-numbers {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+    }
+    .hero-num { }
+    .hero-num strong {
+      display: block;
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+    .hero-num span {
+      font-size: 12px;
+      color: #555;
+      letter-spacing: 0.04em;
+    }
+
+    /* CTA — sem preço */
+    .btn-cta {
+      display: inline-block;
+      background: transparent;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 16px 40px;
+      border-radius: 4px;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.2);
+      width: fit-content;
+      transition: all 0.2s;
+      letter-spacing: 0.04em;
+    }
+    .btn-cta:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: #C9A84C;
+      color: #C9A84C;
+    }
+    .btn-cta-sub {
+      display: block;
+      font-size: 11px;
+      color: #444;
+      margin-top: 10px;
+      letter-spacing: 0.04em;
+    }
+
+    /* Lado direito — foto */
+    .hero-foto-side {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(160deg, #151208 0%, #1A1610 50%, #0A0A0A 100%);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    /* Padrão diagonal decorativo */
+    .hero-foto-side::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 30px,
+        rgba(201,168,76,0.03) 30px,
+        rgba(201,168,76,0.03) 31px
+      );
+    }
+
+    /* Gradiente lateral */
+    .foto-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to right, #0A0A0A 0%, transparent 25%),
+        linear-gradient(to top, #0A0A0A 0%, transparent 20%);
+      z-index: 1;
+    }
+
+    /* Placeholder da foto */
+    .foto-placeholder {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 0;
+    }
+    .foto-silhueta {
+      width: 65%;
+      height: 85%;
+      position: relative;
+    }
+    /* Círculo dourado de destaque atrás da pessoa */
+    .foto-silhueta::before {
+      content: '';
+      position: absolute;
+      top: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+      border: 1px solid rgba(201,168,76,0.15);
+    }
+    /* Nota de where foto goes */
+    .foto-note {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: rgba(255,255,255,0.08);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-align: center;
+      line-height: 2;
+      z-index: 2;
+    }
+
+    /* Citação sobre a foto */
+    .foto-quote {
+      position: absolute;
+      bottom: 32px;
+      left: 32px;
+      right: 32px;
+      z-index: 3;
+      background: rgba(10,10,10,0.9);
+      border-left: 3px solid #C9A84C;
+      padding: 16px 20px;
+    }
+    .foto-quote p {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.95rem;
+      font-style: italic;
+      color: #ccc;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+    .foto-quote cite {
+      font-size: 11px;
+      color: #C9A84C;
+      font-style: normal;
+      letter-spacing: 0.06em;
+    }
+
+    /* Logos de mídia */
+    .media-strip {
+      background: #0D0D0D;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding: 20px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .media-label {
+      font-size: 11px;
+      color: #444;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .media-logos {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .media-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #333;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .context-label {
+      background: #0A0A0A;
+      color: #333;
+      text-align: center;
+      padding: 16px;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      border-top: 1px solid #1a1a1a;
+    }
+
+    @media (max-width: 768px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-content { padding: 48px 24px 32px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
+      .hero-foto-side { min-height: 280px; }
+      .topbar { padding: 16px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Topbar com nome do produtor -->
+<div style="background:#0A0A0A; border-bottom: 1px solid rgba(255,255,255,0.06);">
+  <div class="topbar">
+    <span class="topbar-nome">{{NOME_PRODUTOR}}</span>
+    <a href="#contato" class="topbar-cta">Agendar conversa →</a>
+  </div>
+</div>
+
+<div class="hero">
+  <!-- ESQUERDA: conteúdo -->
+  <div class="hero-content">
+    <span class="hero-tag">{{NICHO}}</span>
+
+    <h1>{{HEADLINE}}</h1>
+
+    <div class="hero-divider"></div>
+
+    <p class="hero-sub">{{SUBHEADLINE}}</p>
+
+    <!-- Números de autoridade -->
+    <div class="hero-numbers">
+      <div class="hero-num">
+        <strong>{{NUM_ANOS}}</strong>
+        <span>anos de experiência</span>
+      </div>
+      <div class="hero-num">
+        <strong>{{NUM_CLIENTES}}</strong>
+        <span>clientes atendidos</span>
+      </div>
+      <div class="hero-num">
+        <strong>{{NUM_RESULTADO}}</strong>
+        <span>{{LABEL_RESULTADO}}</span>
+      </div>
+    </div>
+
+    <a href="#contato" class="btn-cta">{{TEXTO_CTA}}</a>
+    <span class="btn-cta-sub">Vagas limitadas · Processo seletivo aplicado</span>
+  </div>
+
+  <!-- DIREITA: foto do produtor -->
+  <div class="hero-foto-side">
+    <div class="foto-overlay"></div>
+    <div class="foto-placeholder">
+      <div class="foto-silhueta">
+        <div class="foto-note">📸 Foto do<br>produtor aqui</div>
+      </div>
+    </div>
+    <div class="foto-quote">
+      <p>"{{CITACAO_PRODUTOR}}"</p>
+      <cite>— {{NOME_PRODUTOR}}</cite>
+    </div>
+  </div>
+</div>
+
+<!-- Aparições na mídia -->
+<div class="media-strip">
+  <span class="media-label">Visto em</span>
+  <div class="media-logos">
+    <span class="media-logo">{{MIDIA_1}}</span>
+    <span class="media-logo">{{MIDIA_2}}</span>
+    <span class="media-logo">{{MIDIA_3}}</span>
+    <span class="media-logo">{{MIDIA_4}}</span>
+  </div>
+</div>
+
+<div class="context-label">TEMPLATE 2 · OPÇÃO A — Hero 50/50 Autoridade · texto + números à esquerda · foto + citação à direita</div>
+
+</body>
+</html>

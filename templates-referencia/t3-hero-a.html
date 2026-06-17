@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hero Opção A — Qualificação com Formulário</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #0B1929; -webkit-font-smoothing: antialiased; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      background: rgba(11,25,41,0.95);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 16px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-logo {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .topbar-logo span { color: #1E6FD9; }
+    .topbar-contato {
+      font-size: 12px;
+      color: #666;
+    }
+    .topbar-contato a { color: #1E6FD9; text-decoration: none; font-weight: 600; }
+
+    /* ── HERO SPLIT ── */
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      min-height: 640px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* ESQUERDA — dor + autoridade */
+    .hero-left {
+      padding: 64px 56px 64px 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-right: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(30,111,217,0.12);
+      border: 1px solid rgba(30,111,217,0.25);
+      color: #5B9FE8;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 4px;
+      margin-bottom: 28px;
+      width: fit-content;
+    }
+
+    .hero-left h1 {
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+    .hero-left h1 em {
+      font-style: normal;
+      color: #1E6FD9;
+    }
+
+    .hero-left p {
+      font-size: 1rem;
+      color: #6B7A8D;
+      line-height: 1.7;
+      margin-bottom: 36px;
+    }
+
+    /* Checklist de dores */
+    .pain-check {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+    .pain-check li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: 0.9rem;
+      color: #8A9BB0;
+      line-height: 1.5;
+    }
+    .check-box {
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      border: 1.5px solid #1E6FD9;
+      border-radius: 3px;
+      background: rgba(30,111,217,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+      flex-shrink: 0;
+    }
+    .check-box::after {
+      content: '✓';
+      font-size: 11px;
+      color: #1E6FD9;
+      font-weight: 700;
+    }
+
+    /* Números de volume */
+    .volume-numbers {
+      display: flex;
+      gap: 32px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      flex-wrap: wrap;
+    }
+    .vol-num strong {
+      display: block;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+    .vol-num span { font-size: 11px; color: #3A4D60; letter-spacing: 0.04em; }
+
+    /* DIREITA — formulário */
+    .hero-right {
+      padding: 48px 48px 48px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .form-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 36px 32px;
+    }
+
+    .form-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .form-subtitle {
+      font-size: 13px;
+      color: #4A6080;
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #4A6080;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 4px;
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+      border-color: #1E6FD9;
+      background: rgba(30,111,217,0.05);
+    }
+    .form-group select option { background: #0B1929; color: #fff; }
+    .form-group input::placeholder { color: #2A3A4D; }
+
+    .form-submit {
+      width: 100%;
+      background: #1E6FD9;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 16px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+    .form-submit:hover { background: #1860C0; }
+
+    .form-disclaimer {
+      font-size: 11px;
+      color: #2A3A4D;
+      text-align: center;
+      margin-top: 14px;
+      line-height: 1.6;
+    }
+
+    /* Garantia */
+    .garantia-strip {
+      background: rgba(30,111,217,0.06);
+      border: 1px solid rgba(30,111,217,0.12);
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .garantia-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .garantia-text strong {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #5B9FE8;
+      margin-bottom: 2px;
+    }
+    .garantia-text span { font-size: 11px; color: #3A5070; line-height: 1.4; }
+
+    .context-label {
+      background: #0B1929;
+      color: #1E3050;
+      text-align: center;
+      padding: 16px;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-left { padding: 48px 24px 32px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05); }
+      .hero-right { padding: 32px 24px 48px; }
+      .topbar { padding: 14px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <span class="topbar-logo">{{NOME_PRODUTO}}<span>.</span></span>
+  <span class="topbar-contato">Dúvidas? <a href="#">Fale conosco</a></span>
+</div>
+
+<div class="hero">
+
+  <!-- ESQUERDA: dor + autoridade -->
+  <div class="hero-left">
+    <span class="hero-badge">{{NICHO}}</span>
+
+    <h1>{{HEADLINE}}</h1>
+
+    <p>{{SUBHEADLINE}}</p>
+
+    <!-- Checklist de dores -->
+    <ul class="pain-check">
+      <li><span class="check-box"></span>{{DOR_QUALIFICACAO_1}}</li>
+      <li><span class="check-box"></span>{{DOR_QUALIFICACAO_2}}</li>
+      <li><span class="check-box"></span>{{DOR_QUALIFICACAO_3}}</li>
+      <li><span class="check-box"></span>{{DOR_QUALIFICACAO_4}}</li>
+    </ul>
+
+    <!-- Volume social proof -->
+    <div class="volume-numbers">
+      <div class="vol-num">
+        <strong>{{NUM_EMPRESAS}}</strong>
+        <span>empresas atendidas</span>
+      </div>
+      <div class="vol-num">
+        <strong>{{NUM_PAISES}}</strong>
+        <span>países</span>
+      </div>
+      <div class="vol-num">
+        <strong>{{NUM_ANOS}}+</strong>
+        <span>anos de metodologia</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIREITA: formulário de qualificação -->
+  <div class="hero-right">
+    <div class="form-card">
+      <p class="form-title">{{TITULO_FORMULARIO}}</p>
+      <p class="form-subtitle">{{SUBTITULO_FORMULARIO}}</p>
+
+      <div class="form-group">
+        <label>Nome completo</label>
+        <input type="text" placeholder="Seu nome" />
+      </div>
+
+      <div class="form-group">
+        <label>Melhor e-mail</label>
+        <input type="email" placeholder="seu@email.com" />
+      </div>
+
+      <div class="form-group">
+        <label>WhatsApp com DDD</label>
+        <input type="tel" placeholder="(11) 99999-9999" />
+      </div>
+
+      <div class="form-group">
+        <label>{{LABEL_QUALIFICACAO_1}}</label>
+        <select>
+          <option value="">Selecione...</option>
+          <option>{{OPT_1}}</option>
+          <option>{{OPT_2}}</option>
+          <option>{{OPT_3}}</option>
+          <option>{{OPT_4}}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Você é o decisor?</label>
+        <select>
+          <option value="">Selecione...</option>
+          <option>Sim, sou o dono/decisor</option>
+          <option>Não, precisaria consultar alguém</option>
+        </select>
+      </div>
+
+      <button class="form-submit">{{TEXTO_CTA}}</button>
+
+      <p class="form-disclaimer">Não enviamos spam. Suas informações são protegidas e utilizadas apenas para contato sobre o programa.</p>
+
+      <div class="garantia-strip">
+        <span class="garantia-icon">🛡️</span>
+        <div class="garantia-text">
+          <strong>Garantia registrada em cartório</strong>
+          <span>{{TEXTO_GARANTIA_CURTO}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="context-label">TEMPLATE 3 · OPÇÃO A — Hero com formulário de qualificação à direita · dores + autoridade à esquerda</div>
+
+</body>
+</html>

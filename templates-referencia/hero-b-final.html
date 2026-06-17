@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hero Opção B — Fundo Temático</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #111; -webkit-font-smoothing: antialiased; }
+
+    .urgency-bar {
+      background: #E8410A;
+      color: #fff;
+      text-align: center;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    /* ── HERO FULL BG ── */
+    .hero {
+      position: relative;
+      min-height: 640px;
+      display: flex;
+      align-items: center;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    /* Fundo: gradiente rico simulando foto com iluminação */
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 70% 40%, rgba(80,40,10,0.9) 0%, transparent 60%),
+        radial-gradient(ellipse at 30% 80%, rgba(232,65,10,0.15) 0%, transparent 50%),
+        linear-gradient(160deg, #0D0D0D 0%, #1A0E05 35%, #0D0D0D 100%);
+    }
+
+    /* Grade decorativa sutil */
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    /* Círculo de luz */
+    .hero-glow {
+      position: absolute;
+      top: -100px;
+      right: 15%;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(232,65,10,0.12) 0%, transparent 70%);
+    }
+
+    /* Overlay para escurecer bordas */
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(13,13,13,0.3) 0%,
+        rgba(13,13,13,0.4) 65%,
+        rgba(13,13,13,1) 100%
+      );
+    }
+
+    /* ── CONTEÚDO ── */
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 80px 24px;
+    }
+
+    /* Avatar do produtor — CSS puro */
+    .hero-avatar-wrap {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .avatar-circle {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      border: 3px solid #E8410A;
+      background: linear-gradient(135deg, #2A1A0A, #3D2510);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Silhueta de pessoa via CSS */
+    .avatar-circle::before {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 48px;
+      height: 56px;
+      background: #5C3D20;
+      border-radius: 50% 50% 0 0;
+    }
+    .avatar-circle::after {
+      content: '';
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 32px;
+      height: 32px;
+      background: #C4A882;
+      border-radius: 50%;
+    }
+    .avatar-name { font-size: 13px; color: #888; }
+    .avatar-name strong { color: #fff; }
+
+    .hero-eyebrow {
+      display: inline-block;
+      background: rgba(232,65,10,0.18);
+      border: 1px solid rgba(232,65,10,0.45);
+      color: #FF7A52;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 5px 16px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+    }
+
+    .hero-content h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.08;
+      margin-bottom: 20px;
+    }
+    .hero-content h1 em { font-style: normal; color: #FFD93D; }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: #A0A0A0;
+      max-width: 540px;
+      margin: 0 auto 36px;
+      line-height: 1.65;
+    }
+
+    .price-from { font-size: 13px; color: #666; }
+    .price-from s { color: #555; }
+    .price-main {
+      font-family: 'Syne', sans-serif;
+      font-size: 3.2rem;
+      font-weight: 800;
+      color: #fff;
+      display: block;
+      line-height: 1;
+      margin: 6px 0;
+    }
+    .price-parcel { font-size: 13px; color: #777; display: block; margin-bottom: 28px; }
+
+    .btn-cta {
+      display: inline-block;
+      background: #E8410A;
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 700;
+      padding: 18px 52px;
+      border-radius: 100px;
+      text-decoration: none;
+      box-shadow: 0 8px 32px rgba(232,65,10,0.35);
+      transition: background 0.2s;
+    }
+    .btn-cta:hover { background: #C23508; }
+    .btn-cta-sub { display: block; font-size: 12px; color: #666; margin-top: 12px; }
+
+    .hero-proof {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .proof-item { text-align: center; }
+    .proof-item strong {
+      display: block;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .proof-item span { font-size: 12px; color: #666; }
+
+    .context-label {
+      background: #111;
+      color: #444;
+      text-align: center;
+      padding: 16px;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      border-top: 1px solid #222;
+    }
+
+    @media (max-width: 640px) {
+      .hero-content { padding: 56px 20px; }
+      .hero-proof { gap: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="urgency-bar">🔥 Apenas 47 vagas disponíveis — oferta encerra em breve</div>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+
+    <!-- Avatar CSS puro -->
+    <div class="hero-avatar-wrap">
+      <div class="avatar-circle"></div>
+      <span class="avatar-name"><strong>Especialista certificada</strong> · 8 anos de experiência</span>
+    </div>
+
+    <span class="hero-eyebrow">Marketing Digital</span>
+
+    <h1>Aprenda a atrair clientes online <em>em 30 dias</em> mesmo começando do zero</h1>
+
+    <p class="hero-sub">O método direto para empreendedores iniciantes que querem vender online sem desperdiçar dinheiro em anúncios que não convertem.</p>
+
+    <span class="price-from">De <s>R$ 591</s> por apenas</span>
+    <span class="price-main">R$ 197</span>
+    <span class="price-parcel">ou 12x de R$ 19,70</span>
+
+    <a href="#" class="btn-cta">Quero acessar por R$ 197</a>
+    <span class="btn-cta-sub">🔒 Acesso imediato · Garantia de 7 dias</span>
+
+    <div class="hero-proof">
+      <div class="proof-item"><strong>+3.200</strong><span>alunos transformados</span></div>
+      <div class="proof-item"><strong>4.9★</strong><span>avaliação média</span></div>
+      <div class="proof-item"><strong>30 dias</strong><span>para o 1º resultado</span></div>
+      <div class="proof-item"><strong>7 dias</strong><span>garantia</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="context-label">OPÇÃO B — Hero com fundo temático CSS · avatar do produtor centralizado (sem dependência externa)</div>
+
+</body>
+</html>

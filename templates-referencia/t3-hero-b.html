@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hero Opção B — Qualificação Full Width</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #0B1929; -webkit-font-smoothing: antialiased; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      background: #060F1A;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding: 16px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-logo {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .topbar-logo span { color: #1E6FD9; }
+    .topbar-contato {
+      font-size: 12px;
+      color: #2A3A4D;
+    }
+    .topbar-contato a { color: #1E6FD9; text-decoration: none; font-weight: 600; }
+
+    /* ── HERO FULL WIDTH ── */
+    .hero {
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Fundo com textura sutil */
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 100% 0%, rgba(30,111,217,0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 0% 100%, rgba(30,111,217,0.05) 0%, transparent 40%),
+        linear-gradient(180deg, #060F1A 0%, #0B1929 100%);
+    }
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(30,111,217,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(30,111,217,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    /* Conteúdo */
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 72px 48px;
+      text-align: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(30,111,217,0.1);
+      border: 1px solid rgba(30,111,217,0.2);
+      color: #5B9FE8;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 4px;
+      margin-bottom: 24px;
+    }
+
+    .hero-content h1 {
+      font-size: clamp(2rem, 4.5vw, 3.4rem);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .hero-content h1 em {
+      font-style: normal;
+      color: #1E6FD9;
+    }
+
+    .hero-content > p {
+      font-size: 1rem;
+      color: #4A6080;
+      max-width: 600px;
+      margin: 0 auto 48px;
+      line-height: 1.7;
+    }
+
+    /* ── BLOCO DE PROBLEMAS ── */
+    .problems-section {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 36px 40px;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .problems-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #4A6080;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    /* Grid 2x2 de dores */
+    .problems-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .problem-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 16px;
+      background: rgba(30,111,217,0.04);
+      border: 1px solid rgba(30,111,217,0.08);
+      border-radius: 6px;
+    }
+    .problem-check {
+      width: 22px;
+      height: 22px;
+      min-width: 22px;
+      border: 1.5px solid rgba(30,111,217,0.5);
+      border-radius: 3px;
+      background: rgba(30,111,217,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .problem-check::after {
+      content: '✓';
+      font-size: 12px;
+      color: #1E6FD9;
+      font-weight: 700;
+    }
+    .problem-item p {
+      font-size: 0.875rem;
+      color: #6B7A8D;
+      line-height: 1.5;
+    }
+
+    /* Se disse sim */
+    .if-yes {
+      text-align: center;
+      padding: 20px;
+      background: rgba(30,111,217,0.08);
+      border: 1px solid rgba(30,111,217,0.15);
+      border-radius: 6px;
+    }
+    .if-yes p {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .if-yes p span { color: #5B9FE8; }
+
+    /* ── FORMULÁRIO ABAIXO ── */
+    .form-section {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      padding: 36px 40px;
+      text-align: left;
+    }
+
+    .form-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .form-header h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .form-header p { font-size: 13px; color: #3A5070; }
+
+    /* Grid de campos */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .form-group { }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #3A5070;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 4px;
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus { border-color: #1E6FD9; }
+    .form-group select option { background: #0B1929; }
+    .form-group input::placeholder { color: #1E3050; }
+
+    .form-submit {
+      width: 100%;
+      background: #1E6FD9;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 18px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background 0.2s;
+    }
+    .form-submit:hover { background: #1860C0; }
+
+    /* Garantia e disclaimer */
+    .form-footer {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .garantia-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px;
+      background: rgba(30,111,217,0.05);
+      border: 1px solid rgba(30,111,217,0.1);
+      border-radius: 6px;
+    }
+    .garantia-box .icon { font-size: 1.4rem; flex-shrink: 0; }
+    .garantia-box strong { display: block; font-size: 11px; font-weight: 700; color: #5B9FE8; margin-bottom: 3px; }
+    .garantia-box span { font-size: 11px; color: #2A4060; line-height: 1.5; }
+
+    .disclaimer-box {
+      padding: 14px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 6px;
+      font-size: 11px;
+      color: #1E3050;
+      line-height: 1.6;
+    }
+
+    /* Volume social proof */
+    .volume-strip {
+      background: #060F1A;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      padding: 24px 48px;
+      display: flex;
+      justify-content: center;
+      gap: 56px;
+      flex-wrap: wrap;
+    }
+    .vol-item { text-align: center; }
+    .vol-item strong {
+      display: block;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+    .vol-item span { font-size: 11px; color: #1E3050; letter-spacing: 0.04em; }
+
+    .context-label {
+      background: #0B1929;
+      color: #1E3050;
+      text-align: center;
+      padding: 16px;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      border-top: 1px solid rgba(255,255,255,0.03);
+    }
+
+    @media (max-width: 700px) {
+      .hero-content { padding: 48px 20px; }
+      .problems-grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-footer { grid-template-columns: 1fr; }
+      .problems-section { padding: 24px 20px; }
+      .form-section { padding: 24px 20px; }
+      .topbar { padding: 14px 20px; }
+      .volume-strip { gap: 28px; padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <span class="topbar-logo">{{NOME_PRODUTO}}<span>.</span></span>
+  <span class="topbar-contato">Dúvidas? <a href="#">Fale conosco</a></span>
+</div>
+
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+
+  <div class="hero-content">
+    <span class="hero-badge">{{NICHO}}</span>
+    <h1>{{HEADLINE}}</h1>
+    <p>{{SUBHEADLINE}}</p>
+
+    <!-- BLOCO DE PROBLEMAS -->
+    <div class="problems-section">
+      <p class="problems-title">Isso está acontecendo na sua empresa?</p>
+
+      <div class="problems-grid">
+        <div class="problem-item">
+          <span class="problem-check"></span>
+          <p>{{DOR_QUALIFICACAO_1}}</p>
+        </div>
+        <div class="problem-item">
+          <span class="problem-check"></span>
+          <p>{{DOR_QUALIFICACAO_2}}</p>
+        </div>
+        <div class="problem-item">
+          <span class="problem-check"></span>
+          <p>{{DOR_QUALIFICACAO_3}}</p>
+        </div>
+        <div class="problem-item">
+          <span class="problem-check"></span>
+          <p>{{DOR_QUALIFICACAO_4}}</p>
+        </div>
+      </div>
+
+      <div class="if-yes">
+        <p>Se você disse <span>sim a qualquer um desses itens</span>, o {{NOME_PRODUTO}} foi feito para você.</p>
+      </div>
+    </div>
+
+    <!-- FORMULÁRIO -->
+    <div class="form-section">
+      <div class="form-header">
+        <h2>{{TITULO_FORMULARIO}}</h2>
+        <p>{{SUBTITULO_FORMULARIO}}</p>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nome completo</label>
+          <input type="text" placeholder="Seu nome" />
+        </div>
+        <div class="form-group">
+          <label>WhatsApp com DDD</label>
+          <input type="tel" placeholder="(11) 99999-9999" />
+        </div>
+        <div class="form-group">
+          <label>Melhor e-mail</label>
+          <input type="email" placeholder="seu@email.com" />
+        </div>
+        <div class="form-group">
+          <label>{{LABEL_QUALIFICACAO_1}}</label>
+          <select>
+            <option value="">Selecione...</option>
+            <option>{{OPT_1}}</option>
+            <option>{{OPT_2}}</option>
+            <option>{{OPT_3}}</option>
+            <option>{{OPT_4}}</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Você é o decisor do negócio?</label>
+          <select>
+            <option value="">Selecione...</option>
+            <option>Sim, sou o dono / CEO</option>
+            <option>Sou sócio e tomo decisões</option>
+            <option>Preciso consultar um sócio</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="form-submit">{{TEXTO_CTA}}</button>
+
+      <div class="form-footer">
+        <div class="garantia-box">
+          <span class="icon">🛡️</span>
+          <div>
+            <strong>Garantia registrada em cartório</strong>
+            <span>{{TEXTO_GARANTIA_CURTO}}</span>
+          </div>
+        </div>
+        <div class="disclaimer-box">
+          Não enviamos spam. Suas informações são protegidas e utilizadas apenas para análise de perfil e contato sobre o programa {{NOME_PRODUTO}}.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Volume social proof -->
+<div class="volume-strip">
+  <div class="vol-item"><strong>{{NUM_EMPRESAS}}</strong><span>empresas atendidas</span></div>
+  <div class="vol-item"><strong>{{NUM_PAISES}}</strong><span>países</span></div>
+  <div class="vol-item"><strong>{{NUM_ANOS}}+</strong><span>anos de metodologia</span></div>
+  <div class="vol-item"><strong>{{NUM_NPS}}</strong><span>NPS de satisfação</span></div>
+</div>
+
+<div class="context-label">TEMPLATE 3 · OPÇÃO B — Hero full width · checklist de dores + formulário de qualificação centralizado</div>
+
+</body>
+</html>

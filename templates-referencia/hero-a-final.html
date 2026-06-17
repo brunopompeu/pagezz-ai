@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hero Opção A — 50/50</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #111; -webkit-font-smoothing: antialiased; }
+
+    .urgency-bar {
+      background: #E8410A;
+      color: #fff;
+      text-align: center;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .hero {
+      min-height: 580px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      max-width: 1100px;
+      margin: 0 auto;
+      align-items: stretch;
+    }
+
+    /* ── LADO ESQUERDO ── */
+    .hero-content {
+      padding: 72px 48px 72px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .hero-eyebrow {
+      display: inline-block;
+      background: #E8410A;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+      width: fit-content;
+    }
+    .hero-content h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 3.2vw, 2.8rem);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .hero-content h1 em { font-style: normal; color: #FFD93D; }
+    .hero-sub {
+      font-size: 1rem;
+      color: #A0A0A0;
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+    .price-from { font-size: 13px; color: #666; }
+    .price-from s { color: #555; }
+    .price-main {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.6rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+      display: block;
+      margin: 4px 0 4px;
+    }
+    .price-parcel { font-size: 13px; color: #777; margin-bottom: 24px; display: block; }
+    .btn-cta {
+      display: inline-block;
+      background: #E8410A;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 16px 40px;
+      border-radius: 100px;
+      text-decoration: none;
+      width: fit-content;
+      transition: background 0.2s;
+    }
+    .btn-cta:hover { background: #C23508; }
+    .btn-cta-sub { display: block; font-size: 12px; color: #666; margin-top: 10px; }
+
+    /* ── LADO DIREITO — foto CSS ── */
+    .hero-foto-side {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(160deg, #1E1208 0%, #2D1800 40%, #1A1A1A 100%);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    /* Silhueta de pessoa em SVG inline como background */
+    .hero-foto-side::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 75%;
+      height: 90%;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 500'%3E%3C!-- Corpo --%3E%3Cellipse cx='150' cy='120' rx='55' ry='62' fill='%23C4A882'/%3E%3C!-- Pescoço --%3E%3Crect x='133' y='175' width='34' height='30' fill='%23C4A882'/%3E%3C!-- Ombros e tronco --%3E%3Cpath d='M60 205 Q90 190 133 195 L133 340 L80 340 Q55 300 60 205Z' fill='%232A1F14'/%3E%3Cpath d='M240 205 Q210 190 167 195 L167 340 L220 340 Q245 300 240 205Z' fill='%232A1F14'/%3E%3Crect x='100' y='190' width='100' height='150' rx='8' fill='%23231A10'/%3E%3C!-- Braços --%3E%3Cpath d='M100 210 Q70 240 65 280 Q65 310 80 315 Q95 320 105 290 L110 240Z' fill='%232A1F14'/%3E%3Cpath d='M200 210 Q230 240 235 280 Q235 310 220 315 Q205 320 195 290 L190 240Z' fill='%232A1F14'/%3E%3C!-- Pernas --%3E%3Crect x='102' y='335' width='42' height='165' rx='5' fill='%231A1208'/%3E%3Crect x='156' y='335' width='42' height='165' rx='5' fill='%231A1208'/%3E%3C!-- Cabelo --%3E%3Cellipse cx='150' cy='85' rx='58' ry='45' fill='%23222'/%3E%3Cpath d='M95 110 Q85 150 90 190 Q100 180 110 160Z' fill='%23222'/%3E%3Cpath d='M205 110 Q215 150 210 190 Q200 180 190 160Z' fill='%23222'/%3E%3C/svg%3E") center bottom / contain no-repeat;
+      opacity: 0.55;
+    }
+
+    /* Gradiente lateral para fundir */
+    .hero-foto-side::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, #111 0%, transparent 30%),
+                  linear-gradient(to top, #111 0%, transparent 20%);
+      z-index: 1;
+    }
+
+    /* Padrão decorativo de pontos */
+    .hero-dots {
+      position: absolute;
+      top: 40px;
+      right: 30px;
+      width: 120px;
+      height: 120px;
+      background-image: radial-gradient(circle, rgba(232,65,10,0.25) 1.5px, transparent 1.5px);
+      background-size: 12px 12px;
+      z-index: 1;
+    }
+
+    /* Badge de resultado */
+    .foto-badge {
+      position: absolute;
+      bottom: 32px;
+      right: 28px;
+      z-index: 3;
+      background: rgba(0,0,0,0.85);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 14px 20px;
+      text-align: center;
+    }
+    .foto-badge strong {
+      display: block;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #FFD93D;
+      line-height: 1;
+    }
+    .foto-badge span { font-size: 11px; color: #aaa; }
+
+    /* Nota de produtor — onde fica a foto real */
+    .foto-placeholder-note {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      text-align: center;
+      color: rgba(255,255,255,0.15);
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      line-height: 2;
+    }
+
+    /* ── PROVA RÁPIDA ── */
+    .quick-proof {
+      background: #1A1A1A;
+      border-top: 1px solid #222;
+      padding: 28px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      gap: 56px;
+      flex-wrap: wrap;
+    }
+    .proof-item { text-align: center; }
+    .proof-item strong {
+      display: block;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .proof-item span { font-size: 12px; color: #666; }
+
+    .context-label {
+      background: #111;
+      color: #444;
+      text-align: center;
+      padding: 16px;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      border-top: 1px solid #222;
+    }
+
+    @media (max-width: 768px) {
+      .hero { grid-template-columns: 1fr; }
+      .hero-content { padding: 48px 24px 32px; }
+      .hero-foto-side { min-height: 280px; }
+      .quick-proof { gap: 28px; padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="urgency-bar">🔥 Apenas 47 vagas disponíveis — oferta encerra em breve</div>
+
+<div class="hero">
+  <!-- ESQUERDA: texto -->
+  <div class="hero-content">
+    <span class="hero-eyebrow">Marketing Digital</span>
+    <h1>Aprenda a atrair clientes online <em>em 30 dias</em> mesmo começando do zero</h1>
+    <p class="hero-sub">O método direto para empreendedores iniciantes que querem vender online sem desperdiçar dinheiro em anúncios que não convertem.</p>
+    <span class="price-from">De <s>R$ 591</s> por apenas</span>
+    <span class="price-main">R$ 197</span>
+    <span class="price-parcel">ou 12x de R$ 19,70</span>
+    <a href="#" class="btn-cta">Quero acessar por R$ 197</a>
+    <span class="btn-cta-sub">🔒 Acesso imediato · Garantia de 7 dias</span>
+  </div>
+
+  <!-- DIREITA: foto do produtor (placeholder visual) -->
+  <div class="hero-foto-side">
+    <div class="hero-dots"></div>
+    <div class="foto-placeholder-note">
+      📸 Foto do produtor<br>substituída aqui
+    </div>
+    <div class="foto-badge">
+      <strong>+3.200</strong>
+      <span>alunos transformados</span>
+    </div>
+  </div>
+</div>
+
+<div class="quick-proof">
+  <div class="proof-item"><strong>+3.200</strong><span>alunos ativos</span></div>
+  <div class="proof-item"><strong>4.9★</strong><span>avaliação média</span></div>
+  <div class="proof-item"><strong>30 dias</strong><span>para o 1º resultado</span></div>
+  <div class="proof-item"><strong>7 dias</strong><span>garantia</span></div>
+</div>
+
+<div class="context-label">OPÇÃO A — Hero 50/50: texto à esquerda · foto do produtor à direita (placeholder visual)</div>
+
+</body>
+</html>
