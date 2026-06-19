@@ -28,6 +28,7 @@ function getStructureBody(structure: StructureName): string {
     case 'low-ticket': return lowTicketStructure()
     case 'authority': return authorityStructure()
     case 'qualification': return qualificationStructure()
+    default: return lowTicketStructure()
   }
 }
 
@@ -67,6 +68,9 @@ function substituteTokens(html: string, data: PageData): string {
     LABEL_QUALIFICACAO_1: data.labelQualificacao1 ?? '',
     BONUS_TITULO: data.bonus?.titulo ?? '',
     BONUS_DESC: data.bonus?.descricao ?? '',
+    HERO_IMAGE_HTML: data.heroImage
+      ? `<img src="${data.heroImage}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;z-index:2;border-radius:inherit;" />`
+      : '',
   }
 
   const entregaveis = data.entregaveis ?? []

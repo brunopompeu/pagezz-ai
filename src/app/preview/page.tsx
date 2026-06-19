@@ -136,8 +136,22 @@ export default function PreviewPage() {
     void rebuild(next)
   }
 
+  const heroImgRef = useRef<HTMLInputElement>(null)
+
   function setTheme(theme: ThemeName) { patch({ theme }) }
   function setHeroStyle(heroStyle: HeroStyle) { patch({ heroStyle }) }
+
+  function handleHeroImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => {
+      const dataUrl = ev.target?.result as string
+      if (dataUrl) patch({ heroImage: dataUrl })
+    }
+    reader.readAsDataURL(file)
+    e.target.value = ''
+  }
 
   async function handleCopy() {
     if (!html) return
@@ -323,6 +337,49 @@ export default function PreviewPage() {
                     <HeroBThumbnail active={pageData.heroStyle === 'b'} />
                     <span className="text-xs text-[var(--text-secondary)]">Hero B · Full</span>
                   </button>
+                </div>
+
+                {/* Image upload */}
+                <div className="mt-3 flex flex-col gap-2">
+                  <p className="text-xs text-[var(--text-secondary)]">Foto do hero</p>
+                  {pageData.heroImage ? (
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={pageData.heroImage}
+                        alt="Hero"
+                        className="h-14 w-14 rounded-md object-cover object-top border border-[var(--border)]"
+                      />
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => heroImgRef.current?.click()}
+                          className="text-xs text-[var(--primary)] hover:underline"
+                        >
+                          Trocar foto
+                        </button>
+                        <button
+                          onClick={() => patch({ heroImage: undefined })}
+                          className="text-xs text-[var(--text-secondary)] hover:text-red-400"
+                        >
+                          Remover
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => heroImgRef.current?.click()}
+                      className="flex items-center gap-2 rounded-lg border border-dashed border-[var(--border)] px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:border-[var(--primary)]/50 hover:text-[var(--text-primary)] transition-colors"
+                    >
+                      <span>📸</span>
+                      <span>Adicionar foto</span>
+                    </button>
+                  )}
+                  <input
+                    ref={heroImgRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleHeroImageUpload}
+                  />
                 </div>
               </section>
 

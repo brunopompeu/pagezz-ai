@@ -5,6 +5,7 @@ export function heroB(structure: StructureName): { css: string; html: string } {
     case 'low-ticket': return lowTicketHeroB()
     case 'authority': return authorityHeroB()
     case 'qualification': return qualificationHeroB()
+    default: return lowTicketHeroB()
   }
 }
 
@@ -195,6 +196,7 @@ function lowTicketHeroB(): { css: string; html: string } {
   <div class="hero-overlay"></div>
   <div class="hero-content">
     <div class="hero-avatar">
+      {{HERO_IMAGE_HTML}}
       <div class="avatar-silhueta"></div>
       <span class="avatar-icon">📸</span>
     </div>
@@ -447,6 +449,7 @@ function authorityHeroB(): { css: string; html: string } {
         <div class="avatar-ring avatar-ring-2"></div>
         <div class="avatar-ring avatar-ring-3"></div>
         <div class="avatar-circle">
+          {{HERO_IMAGE_HTML}}
           <div class="avatar-sil"></div>
           <span class="avatar-empty">📸 Adicione foto</span>
         </div>

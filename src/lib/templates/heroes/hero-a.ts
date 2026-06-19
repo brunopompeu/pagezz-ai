@@ -5,6 +5,7 @@ export function heroA(structure: StructureName): { css: string; html: string } {
     case 'low-ticket': return lowTicketHeroA()
     case 'authority': return authorityHeroA()
     case 'qualification': return qualificationHeroA()
+    default: return lowTicketHeroA()
   }
 }
 
@@ -198,6 +199,7 @@ function lowTicketHeroA(): { css: string; html: string } {
     </div>
     <div class="hero-right">
       <div class="foto-placeholder">
+        {{HERO_IMAGE_HTML}}
         <div class="foto-silhueta"></div>
         <span class="foto-badge" data-suggested="true">{{NUM_RESULTADO}}<br><small style="font-size:11px;font-weight:600">{{LABEL_RESULTADO}}</small></span>
         <div class="foto-inner">
@@ -473,6 +475,7 @@ function authorityHeroA(): { css: string; html: string } {
     </div>
     <div class="hero-right">
       <div class="foto-side">
+        {{HERO_IMAGE_HTML}}
         <div class="foto-silhueta"></div>
         <div class="foto-overlay"></div>
         <div class="foto-empty">

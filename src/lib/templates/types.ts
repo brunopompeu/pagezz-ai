@@ -69,6 +69,9 @@ export interface PageData {
   numExtra?: string
   labelExtra?: string
 
+  // Mídia
+  heroImage?: string // base64 data URI or URL
+
   // Configuração
   heroStyle: HeroStyle
   theme: ThemeName

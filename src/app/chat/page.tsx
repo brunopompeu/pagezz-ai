@@ -122,7 +122,10 @@ function buildPreviewHtml(partialData: Partial<PageData>, customDesign: Design |
 </head><body><div class="p"><div style="font-size:48px">📄</div><p>Sua página aparecerá aqui conforme a conversa avança</p></div></body></html>`
   }
 
-  const structure: StructureName = partialData.structure ?? 'low-ticket'
+  const validStructures: StructureName[] = ['low-ticket', 'authority', 'qualification']
+  const structure: StructureName = validStructures.includes(partialData.structure as StructureName)
+    ? (partialData.structure as StructureName)
+    : 'low-ticket'
   const derivedTheme = partialData.nicho
     ? selectTemplate('ate-97', partialData.nicho).theme
     : 'dark-energy'
