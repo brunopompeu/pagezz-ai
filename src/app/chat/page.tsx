@@ -455,6 +455,27 @@ export default function ChatPage() {
 
   // ── Conversation management ────────────────────────────────────────────────
 
+  // Zera todo o estado do pipeline (estratégia, briefing room, geração, refino)
+  // para que o chatView volte a 'chat'. Sem isso, criar/trocar de conversa deixa
+  // a view presa na tela de estratégia/preview anterior.
+  function resetPipeline() {
+    setStrategyStatus('idle')
+    setStrategy(null)
+    setSelectedPageType('')
+    setSelectedElements(new Set())
+    setBriefingFields(null)
+    setBriefingFieldsStatus('idle')
+    setBriefingValues({})
+    setGenerationStatus('idle')
+    setPageHtmlRaw(null)
+    setGeneratedHtml(null)
+    setRefineInstruction('')
+    setRefineStatus('idle')
+    setIsLoading(false)
+    strategyTriggered.current = false
+    briefingOrchestratorTriggered.current = false
+  }
+
   function createNewConversation(hist: ConversationSummary[]) {
     const newId = generateId()
     const newSummary: ConversationSummary = {
@@ -475,6 +496,7 @@ export default function ChatPage() {
     setDesign(DEFAULT_DESIGN)
     setIsCustomDesign(false)
     setShowHistory(false)
+    resetPipeline()
   }
 
   function handleNewConversation() {
@@ -482,7 +504,10 @@ export default function ChatPage() {
     if (hasProgress) {
       setConfirmNew(true)
     } else {
-      createNewConversation(loadHistory())
+      // Já estamos numa conversa nova e vazia — não cria outra duplicada,
+      // apenas garante que a view volte ao chat.
+      resetPipeline()
+      setShowHistory(false)
     }
   }
 
@@ -497,6 +522,7 @@ export default function ChatPage() {
     setDesign(conv.design)
     setIsCustomDesign(conv.isCustomDesign ?? false)
     setShowHistory(false)
+    resetPipeline()
   }
 
   function handleClearAll() {
