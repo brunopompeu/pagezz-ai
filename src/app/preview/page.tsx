@@ -62,6 +62,7 @@ export default function PreviewPage() {
   const [pageData, setPageData] = useState<PageData | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [rebuilding, setRebuilding] = useState(false)
+  const [obrigadoMounted, setObrigadoMounted] = useState(false)
 
   // ── Count "suggested" fields that are still empty / short ──────────────────
   const suggestedCount = pageData
@@ -190,7 +191,7 @@ export default function PreviewPage() {
             Página de Venda
           </button>
           <button
-            onClick={() => setActiveTab('obrigado')}
+            onClick={() => { setObrigadoMounted(true); setActiveTab('obrigado') }}
             className={`px-4 py-1.5 transition-colors ${activeTab === 'obrigado' ? 'bg-[var(--primary)] text-white font-semibold' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
           >
             Página de Obrigado
@@ -223,24 +224,30 @@ export default function PreviewPage() {
           </div>
         )}
 
-        {!loading && !error && activeTab === 'venda' && (
+        {!loading && !error && (
           <>
-            {rebuilding && (
-              <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--primary)] border-t-transparent" />
+            {/* Venda — always mounted so srcdoc persists across tab switches */}
+            <div className={activeTab === 'venda' ? 'absolute inset-0' : 'hidden'}>
+              {rebuilding && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--primary)] border-t-transparent" />
+                </div>
+              )}
+              <iframe
+                ref={iframeRef}
+                className="h-full w-full border-0"
+                title="Página de Venda"
+                sandbox="allow-same-origin"
+              />
+            </div>
+
+            {/* Obrigado — mounted once on first visit, then kept alive */}
+            {obrigadoMounted && (
+              <div className={activeTab === 'obrigado' ? 'absolute inset-0' : 'hidden'}>
+                <ThankYouPage pageData={pageData} />
               </div>
             )}
-            <iframe
-              ref={iframeRef}
-              className="h-full w-full border-0"
-              title="Página de Venda"
-              sandbox="allow-same-origin"
-            />
           </>
-        )}
-
-        {!loading && !error && activeTab === 'obrigado' && (
-          <ThankYouPage pageData={pageData} />
         )}
 
         {/* ✏️ Personalizar button — fixed over the iframe */}

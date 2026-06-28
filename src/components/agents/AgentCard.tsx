@@ -22,17 +22,25 @@ interface AgentCardProps {
   activity: string
   status: AgentStatus
   isActive?: boolean
+  isSelected?: boolean
+  onClick?: () => void
 }
 
-export default function AgentCard({ label, emoji, activity, status, isActive }: AgentCardProps) {
+export default function AgentCard({ label, emoji, activity, status, isActive, isSelected, onClick }: AgentCardProps) {
+  const clickable = status === 'done' && onClick
   return (
     <div
+      onClick={clickable ? onClick : undefined}
       className={`
         flex items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-300
-        ${isActive
-          ? 'border-[var(--primary)] bg-[color-mix(in_srgb,var(--primary)_6%,transparent)]'
-          : 'border-[var(--border)] bg-[var(--surface)]'
+        ${clickable ? 'cursor-pointer' : ''}
+        ${isSelected
+          ? 'border-[var(--primary)] bg-[color-mix(in_srgb,var(--primary)_10%,transparent)] ring-2 ring-[var(--primary)]/30'
+          : isActive
+            ? 'border-[var(--primary)] bg-[color-mix(in_srgb,var(--primary)_6%,transparent)]'
+            : 'border-[var(--border)] bg-[var(--surface)]'
         }
+        ${clickable && !isSelected ? 'hover:border-[var(--primary)]/60 hover:bg-[color-mix(in_srgb,var(--primary)_4%,transparent)]' : ''}
       `}
     >
       <span

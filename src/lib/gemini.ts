@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { streamFromGroq } from './groq'
+import { streamFromOpenRouter } from './openrouter'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
@@ -38,33 +39,73 @@ async function* fromGemini(
   }
 }
 
-export async function streamAgentResponse(prompt: string): Promise<Response> {
+async function* fromGeminiStream(prompt: string): AsyncGenerator<string> {
   const model = genAI.getGenerativeModel({
     model: process.env.GEMINI_MODEL ?? 'gemini-2.0-flash',
   })
+  const result = await model.generateContentStream(prompt)
+  yield* fromGemini(result)
+}
 
-  try {
-    const result = await model.generateContentStream(prompt)
-    console.log('[ai] provider=gemini model=%s', process.env.GEMINI_MODEL ?? 'gemini-2.0-flash')
-    return makeStream(fromGemini(result))
-  } catch (primaryErr) {
-    console.warn(
-      '[ai] Gemini failed (%s), falling back to Groq',
-      primaryErr instanceof Error ? primaryErr.message : primaryErr,
-    )
+interface Provider {
+  name: string
+  enabled: boolean
+  stream: (prompt: string) => AsyncGenerator<string>
+}
 
+function providerChain(): Provider[] {
+  return [
+    {
+      name: `openrouter model=${process.env.OPENROUTER_MODEL ?? 'openai/gpt-4o'}`,
+      enabled: Boolean(process.env.OPENROUTER_API_KEY),
+      stream: streamFromOpenRouter,
+    },
+    {
+      name: `gemini model=${process.env.GEMINI_MODEL ?? 'gemini-2.0-flash'}`,
+      enabled: Boolean(process.env.GEMINI_API_KEY),
+      stream: fromGeminiStream,
+    },
+    {
+      name: 'groq model=llama-3.3-70b-versatile',
+      enabled: Boolean(process.env.GROQ_API_KEY),
+      stream: streamFromGroq,
+    },
+  ].filter((p) => p.enabled)
+}
+
+/**
+ * Tenta cada provedor em ordem. Para cobrir falhas que só aparecem no primeiro
+ * chunk (ex.: HTTP de erro do OpenRouter), buferiza o primeiro chunk de cada
+ * provedor antes de comprometer com ele.
+ */
+async function* streamWithFallback(prompt: string): AsyncGenerator<string> {
+  const providers = providerChain()
+  for (let i = 0; i < providers.length; i++) {
+    const provider = providers[i]
     try {
-      console.log('[ai] provider=groq model=llama-3.3-70b-versatile (fallback)')
-      return makeStream(streamFromGroq(prompt))
-    } catch (fallbackErr) {
-      console.error(
-        '[ai] Groq fallback also failed:',
-        fallbackErr instanceof Error ? fallbackErr.message : fallbackErr,
+      const gen = provider.stream(prompt)
+      const first = await gen.next()
+      console.log('[ai] provider=%s', provider.name)
+      if (!first.done && first.value) yield first.value
+      yield* gen
+      return
+    } catch (err) {
+      const isLast = i === providers.length - 1
+      console.warn(
+        '[ai] provider=%s failed (%s)%s',
+        provider.name,
+        err instanceof Error ? err.message : err,
+        isLast ? '' : ', trying next',
       )
-      return Response.json(
-        { error: 'Todos os provedores de IA falharam. Tente novamente mais tarde.' },
-        { status: 500 },
-      )
+      if (isLast) throw err
     }
   }
+}
+
+export async function* streamText(prompt: string): AsyncGenerator<string> {
+  yield* streamWithFallback(prompt)
+}
+
+export async function streamAgentResponse(prompt: string): Promise<Response> {
+  return makeStream(streamWithFallback(prompt))
 }

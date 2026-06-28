@@ -12,6 +12,7 @@ export default function GeneratePage() {
   const router = useRouter()
   const [onboarding, setOnboarding] = useState<OnboardingData | null>(null)
   const { agents, activeOutput, overallStatus, start, reset } = useAgentStream()
+  const [selectedAgentName, setSelectedAgentName] = useState<string | null>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem('pagezz_onboarding')
@@ -22,18 +23,31 @@ export default function GeneratePage() {
     setOnboarding(JSON.parse(stored) as OnboardingData)
   }, [router])
 
+  // auto-select the active/last agent while running; keep manual selection after done
+  const activeAgent = agents.find((a) => a.status === 'thinking')
+  useEffect(() => {
+    if (activeAgent) setSelectedAgentName(activeAgent.name)
+  }, [activeAgent?.name])
+
   function handleGenerate() {
     if (onboarding) start(onboarding)
   }
 
   function handleReset() {
     reset()
+    setSelectedAgentName(null)
   }
 
-  const activeAgent = agents.find((a) => a.status === 'thinking')
   const errorAgent = agents.find((a) => a.status === 'error')
+
+  const selectedAgent = selectedAgentName ? agents.find((a) => a.name === selectedAgentName) : null
+  const displayOutput = selectedAgent?.status === 'done'
+    ? selectedAgent.output
+    : overallStatus === 'done'
+      ? agents[agents.length - 1]?.output ?? activeOutput
+      : activeOutput
   const streamStatus = activeAgent ? 'thinking' : overallStatus === 'error' ? 'error' : overallStatus === 'done' ? 'done' : 'idle'
-  const streamLabel = activeAgent?.label ?? errorAgent?.label ?? agents[agents.length - 1]?.label
+  const streamLabel = selectedAgent?.label ?? activeAgent?.label ?? errorAgent?.label ?? agents[agents.length - 1]?.label
 
   return (
     <main className="min-h-screen px-4 py-12">
@@ -64,14 +78,16 @@ export default function GeneratePage() {
               activity={agent.activity}
               status={agent.status}
               isActive={agent.status === 'thinking'}
+              isSelected={selectedAgentName === agent.name}
+              onClick={agent.status === 'done' ? () => setSelectedAgentName(agent.name) : undefined}
             />
           ))}
         </div>
 
         {(overallStatus === 'running' || overallStatus === 'done' || overallStatus === 'error') && (
           <AgentStream
-            output={overallStatus === 'done' ? agents[agents.length - 1]?.output ?? activeOutput : activeOutput}
-            status={streamStatus}
+            output={displayOutput}
+            status={selectedAgent?.status === 'done' ? 'done' : streamStatus}
             label={streamLabel}
           />
         )}

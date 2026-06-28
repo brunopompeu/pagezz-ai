@@ -3,21 +3,12 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-type ModeCardProps = {
-  title: string;
-  description: string;
-  action: string;
-  route: string;
-  marker: string;
-  isNew?: boolean;
-};
-
 const workflow = [
-  "Produto",
-  "Público",
-  "Copy",
-  "Design",
-  "Página",
+  "Descoberta",
+  "Estratégia",
+  "Briefing",
+  "Geração",
+  "Refino",
 ];
 
 function ArrowIcon() {
@@ -56,53 +47,9 @@ function ChatIcon() {
   );
 }
 
-function ModeCard({
-  title,
-  description,
-  action,
-  route,
-  marker,
-  isNew,
-}: ModeCardProps) {
-  const router = useRouter();
-  const Icon = marker === "agents" ? SparkIcon : ChatIcon;
-
-  return (
-    <button
-      onClick={() => router.push(route)}
-      className="group flex min-h-[196px] w-full min-w-0 flex-col justify-between rounded-[26px] border border-[#dce2ef] bg-white p-5 text-left shadow-[0_24px_70px_rgba(13,39,114,0.10)] transition duration-300 hover:-translate-y-1 hover:border-[var(--eduzz-yellow)] hover:shadow-[0_28px_90px_rgba(13,39,114,0.18)] focus:outline-none focus:ring-4 focus:ring-[rgba(255,188,0,0.32)]"
-    >
-      <span className="flex items-start justify-between gap-4">
-        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[var(--eduzz-blue)] text-[var(--eduzz-yellow)]">
-          <Icon />
-        </span>
-        {isNew ? (
-          <span className="rounded-full bg-[var(--eduzz-yellow)] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--eduzz-blue)]">
-            Novo
-          </span>
-        ) : null}
-      </span>
-
-      <span>
-        <span className="font-display block text-[22px] font-bold text-[var(--eduzz-blue)]">
-          {title}
-        </span>
-        <span className="mt-3 block max-w-sm text-sm leading-6 text-[var(--text-secondary)]">
-          {description}
-        </span>
-      </span>
-
-      <span className="font-display mt-5 inline-flex min-w-0 items-center gap-2 text-sm font-bold text-[var(--eduzz-blue)]">
-        {action}
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--eduzz-yellow)] transition group-hover:translate-x-1">
-          <ArrowIcon />
-        </span>
-      </span>
-    </button>
-  );
-}
-
 export default function Home() {
+  const router = useRouter();
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#fff8e8] text-[var(--eduzz-blue)]">
       <div className="absolute -left-24 top-24 h-80 w-80 rounded-full bg-[var(--eduzz-yellow)]" />
@@ -132,7 +79,7 @@ export default function Home() {
 
           <div className="hidden items-center gap-2 rounded-full border border-[#e0e6f2] bg-[#f7f9ff] p-1 text-xs font-bold uppercase tracking-[0.12em] text-[rgba(13,39,114,0.66)] md:flex">
             <span className="rounded-full bg-[var(--eduzz-blue)] px-4 py-2 text-white">
-              Criar
+              Conversa
             </span>
             <span className="px-4 py-2">Estratégia</span>
             <span className="px-4 py-2">Página</span>
@@ -152,26 +99,34 @@ export default function Home() {
               Crie sua página de venda com inteligência de ponta a ponta.
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-[rgba(13,39,114,0.74)]">
-              Escolha um caminho e deixe a IA organizar estratégia, promessa,
-              narrativa e estrutura visual para seu produto digital.
+              Converse com um estrategista de IA. Ele descobre seu negócio, define
+              a estratégia, recomenda o tipo de página, coleta seus materiais e
+              entrega a página pronta — com refino a cada ajuste que você pedir.
             </p>
 
-            <div className="mt-7 grid gap-4 sm:grid-cols-2">
-              <ModeCard
-                marker="agents"
-                title="Modo Agentes"
-                description="Preencha um briefing rápido e quatro agentes trabalham em sequência para gerar uma página completa."
-                action="Começar pelo briefing"
-                route="/onboarding"
-              />
-              <ModeCard
-                marker="chat"
-                title="Modo Conversa"
-                description="Converse com um estrategista de IA e veja sua página tomar forma enquanto você explica o produto."
-                action="Começar conversando"
-                route="/chat"
-                isNew
-              />
+            <div className="mt-7">
+              <button
+                onClick={() => router.push("/chat")}
+                className="group flex w-full items-center justify-between gap-4 rounded-[26px] border border-[#dce2ef] bg-white p-6 text-left shadow-[0_24px_70px_rgba(13,39,114,0.10)] transition duration-300 hover:-translate-y-1 hover:border-[var(--eduzz-yellow)] hover:shadow-[0_28px_90px_rgba(13,39,114,0.18)] focus:outline-none focus:ring-4 focus:ring-[rgba(255,188,0,0.32)]"
+              >
+                <span className="flex items-start gap-4">
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[var(--eduzz-blue)] text-[var(--eduzz-yellow)]">
+                    <ChatIcon />
+                  </span>
+                  <span>
+                    <span className="font-display block text-[22px] font-bold text-[var(--eduzz-blue)]">
+                      Começar agora
+                    </span>
+                    <span className="mt-2 block max-w-md text-sm leading-6 text-[var(--text-secondary)]">
+                      Uma conversa só. A IA conduz da descoberta do negócio até a
+                      página gerada e refinada.
+                    </span>
+                  </span>
+                </span>
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--eduzz-yellow)] text-[var(--eduzz-blue)] transition group-hover:translate-x-1">
+                  <ArrowIcon />
+                </span>
+              </button>
             </div>
           </div>
 
@@ -211,19 +166,19 @@ export default function Home() {
 
             <div className="mt-5 grid grid-cols-3 overflow-hidden rounded-[24px] bg-white text-[var(--eduzz-blue)]">
               <div className="border-r border-[#e4e8f1] p-5">
-                <p className="font-display text-4xl font-extrabold">4</p>
+                <p className="font-display text-4xl font-extrabold">5</p>
                 <p className="mt-1 text-xs font-bold uppercase tracking-[0.12em] text-[rgba(13,39,114,0.58)]">
-                  agentes
+                  etapas
                 </p>
               </div>
               <div className="border-r border-[#e4e8f1] p-5">
-                <p className="font-display text-4xl font-extrabold">1</p>
+                <p className="font-display text-4xl font-extrabold">IA</p>
                 <p className="mt-1 text-xs font-bold uppercase tracking-[0.12em] text-[rgba(13,39,114,0.58)]">
-                  conversa
+                  multi-agente
                 </p>
               </div>
               <div className="p-5">
-                <p className="font-display text-4xl font-extrabold">AI</p>
+                <p className="font-display text-4xl font-extrabold">1</p>
                 <p className="mt-1 text-xs font-bold uppercase tracking-[0.12em] text-[rgba(13,39,114,0.58)]">
                   página
                 </p>
