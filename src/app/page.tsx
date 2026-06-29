@@ -150,16 +150,13 @@ export default function Home() {
                     : "border-[rgba(13,39,114,0.12)] hover:border-[rgba(13,39,114,0.28)]"
                 }`}
               >
-                <span className="absolute right-2.5 top-2.5 rounded-full bg-[var(--eduzz-yellow)] px-1.5 py-px text-[0.48rem] font-extrabold uppercase tracking-wide text-[var(--eduzz-blue)]">
-                  Em breve
-                </span>
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--eduzz-yellow)] text-[var(--eduzz-blue)]">
                   <TrendingIcon />
                 </div>
                 <div className="text-[0.8rem] font-bold leading-tight">Planejar divulgação</div>
                 <div className="text-[0.66rem] leading-snug text-gray-400">Já tem a página. A IA monta canal, funil e criativos.</div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[0.63rem] font-bold opacity-50">Em breve</span>
+                  <span className="text-[0.63rem] font-bold">Começar agora</span>
                   <span className={`flex h-5 w-5 items-center justify-center rounded-full bg-[var(--eduzz-yellow)] text-[var(--eduzz-blue)] transition-transform duration-150 ${activePath === "growth" ? "translate-x-0.5" : ""}`}>
                     <ArrowIcon />
                   </span>
@@ -179,8 +176,8 @@ export default function Home() {
                 </button>
               ) : (
                 <button
-                  disabled
-                  className="flex cursor-not-allowed items-center gap-2 rounded-[10px] bg-[var(--eduzz-blue)] px-5 py-3 text-sm font-bold text-white opacity-40"
+                  onClick={() => router.push("/growth")}
+                  className="flex items-center gap-2 rounded-[10px] bg-[var(--eduzz-blue)] px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--eduzz-blue)] focus-visible:ring-offset-2"
                 >
                   <ArrowIcon />
                   Planejar divulgação

@@ -7,6 +7,7 @@ import { selectTemplate } from '@/lib/templates/selectTemplate'
 import { injectWidgets, applyHeroImage } from '@/lib/templates/injectWidgets'
 import type { PageData, ThemeName, StructureName } from '@/lib/templates/types'
 import type { BriefingField } from '@/lib/agents/briefingOrchestrator'
+import { GrowthEntryButton } from '@/components/growth/GrowthEntryButton'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -1417,6 +1418,7 @@ export default function ChatPage() {
               >
                 Copiar HTML
               </button>
+              <GrowthEntryButton />
             </div>
             <iframe
               srcDoc={generatedHtml ?? ''}
