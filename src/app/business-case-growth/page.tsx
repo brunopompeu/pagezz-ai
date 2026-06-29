@@ -53,10 +53,14 @@ export default function BusinessCaseGrowth() {
               <p className="text-[0.55rem] font-bold uppercase tracking-[0.2em] text-[rgba(13,39,114,0.45)]">Eduzz Intelligence</p>
             </div>
           </Link>
-          <Tag>Business Case · Growth</Tag>
-          <Link href="/growth" className="rounded-full bg-[var(--eduzz-blue)] px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-85">
-            Ver protótipo →
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/" className="rounded-full border border-[rgba(13,39,114,0.15)] px-3.5 py-2 text-xs font-semibold text-[rgba(13,39,114,0.6)] transition-colors hover:border-[rgba(13,39,114,0.35)] hover:text-[var(--eduzz-blue)]">
+              ← Home
+            </Link>
+            <Link href="/growth" className="rounded-full bg-[var(--eduzz-blue)] px-4 py-2 text-xs font-bold text-white transition-opacity hover:opacity-85">
+              Ver protótipo →
+            </Link>
+          </div>
         </div>
       </header>
 
