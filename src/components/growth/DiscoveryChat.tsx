@@ -46,7 +46,10 @@ const AUDIENCE_OPTIONS: { label: string; hasAudience: boolean; audienceSize?: nu
   { label: 'Sim, grande (10k+)', hasAudience: true, audienceSize: 20000 },
 ]
 
-const QUESTION_TEXTS = [
+type Phase = 'discovery' | 'operational' | 'ready'
+type OpStep = 0 | 1 | 2  // 0=budget, 1=hours, 2=audience
+
+const OP_QUESTIONS = [
   'Você tem verba pra investir em anúncios?',
   'Quantas horas por semana você consegue dedicar à divulgação?',
   'Você já tem audiência? (seguidores, lista de e-mail, grupo)',
@@ -58,84 +61,35 @@ export function DiscoveryChat({ mode, pageContext }: Props) {
 
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [input, setInput] = useState('')
+  const [apiHistory, setApiHistory] = useState<{ role: string; content: string }[]>([])
+  const [growthDiscovery, setGrowthDiscovery] = useState<Record<string, unknown>>({})
 
-  // post_page state
-  const [ppStep, setPpStep] = useState<0 | 1 | 2 | 'done'>(0)
+  // Phase management
+  const [phase, setPhase] = useState<Phase>('discovery')
+  const [opStep, setOpStep] = useState<OpStep>(0)
+
+  // Operational answers
   const [budget, setBudget] = useState<DiscoveryInput['budget']>('zero')
   const [hoursPerWeek, setHoursPerWeek] = useState<number>(6)
   const [hasAudience, setHasAudience] = useState<boolean>(false)
   const [audienceSize, setAudienceSize] = useState<number | undefined>(undefined)
-
-  // direct state
-  const [input, setInput] = useState('')
-  const [briefing, setBriefing] = useState<Record<string, unknown>>({})
-  const [apiHistory, setApiHistory] = useState<{ role: string; content: string }[]>([])
 
   function addMessage(role: 'user' | 'assistant', text: string) {
     setMessages(prev => [...prev, { id: `${Date.now()}-${Math.random()}`, role, text }])
   }
 
   useEffect(() => {
-    const initText = mode === 'post_page'
-      ? QUESTION_TEXTS[0]
-      : 'Oi! Vou te ajudar a montar um plano de divulgação. Primeiro me conta: qual é o seu produto e pra quem ele é?'
+    const initText = mode === 'post_page' && pageContext
+      ? `Sua página para "${pageContext.product}" está pronta. Agora vamos montar o plano de divulgação. Você tem perfis em redes sociais hoje? Me conta quais e quantos seguidores você tem.`
+      : 'Oi! Vou te ajudar a montar um plano de divulgação completo. Primeiro me conta: qual é o seu produto e para quem ele é?'
     setMessages([{ id: 'init', role: 'assistant', text: initText }])
-  }, [mode])
+  }, [mode, pageContext])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading])
 
-  // post_page handlers
-  function handleBudget(label: string, value: DiscoveryInput['budget']) {
-    addMessage('user', label)
-    setBudget(value)
-    setTimeout(() => {
-      addMessage('assistant', QUESTION_TEXTS[1])
-      setPpStep(1)
-    }, 300)
-  }
-
-  function handleHours(label: string, value: number) {
-    addMessage('user', label)
-    setHoursPerWeek(value)
-    setTimeout(() => {
-      addMessage('assistant', QUESTION_TEXTS[2])
-      setPpStep(2)
-    }, 300)
-  }
-
-  function handleAudience(label: string, ha: boolean, size?: number) {
-    addMessage('user', label)
-    setHasAudience(ha)
-    setAudienceSize(size)
-    setTimeout(() => {
-      addMessage('assistant', 'Perfeito! Tenho tudo que preciso. Vou montar sua estratégia. 🚀')
-      setPpStep('done')
-    }, 300)
-  }
-
-  function handleGeneratePostPage() {
-    if (!pageContext) return
-    const discoveryInput: DiscoveryInput = {
-      budget,
-      hoursPerWeek,
-      hasAudience,
-      audienceSize,
-      hasPostedContent: hasAudience,
-      mainGoal: 'first_sale',
-    }
-    const state: GrowthState = {
-      pageContext,
-      discoveryInput,
-      currentStep: 'strategy',
-      entryMode: 'post_page',
-    }
-    saveGrowthState(state)
-    router.push('/growth/strategy')
-  }
-
-  // direct mode
   async function sendMessage() {
     const text = input.trim()
     if (!text || isLoading) return
@@ -147,10 +101,13 @@ export function DiscoveryChat({ mode, pageContext }: Props) {
     setApiHistory(newHistory)
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch('/api/agents/growth/discovery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newHistory }),
+        body: JSON.stringify({
+          messages: newHistory,
+          pageContext: mode === 'post_page' ? pageContext : undefined,
+        }),
       })
       if (!res.ok || !res.body) throw new Error('Erro na API')
 
@@ -166,32 +123,47 @@ export function DiscoveryChat({ mode, pageContext }: Props) {
           if (line.startsWith('data: ')) {
             const data = line.slice(6)
             if (data === '[DONE]' || data === '[ERROR]') break
-            try { accumulated += JSON.parse(data) as string } catch { /* partial chunk */ }
+            try { accumulated += JSON.parse(data) as string } catch { /* partial */ }
           }
         }
       }
 
       let displayText = accumulated
+      let discoveryComplete = false
+
       try {
-        const parsed = JSON.parse(accumulated) as { message?: string; briefing_update?: Record<string, unknown> }
+        const parsed = JSON.parse(accumulated) as {
+          message?: string
+          growth_discovery_update?: Record<string, unknown>
+          meta?: { growth_discovery_completo?: boolean }
+        }
+
         if (parsed.message) displayText = parsed.message
-        if (parsed.briefing_update) {
-          setBriefing(prev => {
+
+        if (parsed.growth_discovery_update) {
+          setGrowthDiscovery(prev => {
             const next = { ...prev }
-            for (const [k, v] of Object.entries(parsed.briefing_update!)) {
-              if (v && typeof v === 'object' && !Array.isArray(v)) {
-                next[k] = { ...(prev[k] as Record<string, unknown> ?? {}), ...(v as Record<string, unknown>) }
-              } else {
-                next[k] = v
-              }
+            for (const [k, v] of Object.entries(parsed.growth_discovery_update!)) {
+              if (v !== null && v !== undefined) next[k] = v
             }
             return next
           })
+        }
+
+        if (parsed.meta?.growth_discovery_completo) {
+          discoveryComplete = true
         }
       } catch { /* raw text, use accumulated */ }
 
       addMessage('assistant', displayText)
       setApiHistory(prev => [...prev, { role: 'assistant', content: displayText }])
+
+      if (discoveryComplete) {
+        setTimeout(() => {
+          addMessage('assistant', OP_QUESTIONS[0])
+          setPhase('operational')
+        }, 600)
+      }
     } catch {
       addMessage('assistant', 'Desculpe, tive um problema técnico. Pode tentar novamente?')
     } finally {
@@ -206,45 +178,60 @@ export function DiscoveryChat({ mode, pageContext }: Props) {
     }
   }
 
-  function briefingIsComplete(): boolean {
-    const negocio = briefing.negocio as Record<string, unknown> | undefined
-    const publico = briefing.publico as Record<string, unknown> | undefined
-    return !!(negocio?.produto && negocio?.nicho && negocio?.ticket_medio && publico?.perfil)
+  // Operational handlers
+  function handleBudget(label: string, value: DiscoveryInput['budget']) {
+    addMessage('user', label)
+    setBudget(value)
+    setTimeout(() => {
+      addMessage('assistant', OP_QUESTIONS[1])
+      setOpStep(1)
+    }, 300)
   }
 
-  function handleGenerateDirect() {
-    const negocio = briefing.negocio as Record<string, unknown> | undefined
-    const publico = briefing.publico as Record<string, unknown> | undefined
-    const analise = briefing.analise_produto as Record<string, unknown> | undefined
-    const ticketMedio = (negocio?.ticket_medio as TicketMedio) ?? 'ate-97'
-    const ticketInfo = TICKET_MAP[ticketMedio] ?? TICKET_MAP['ate-97']
+  function handleHours(label: string, value: number) {
+    addMessage('user', label)
+    setHoursPerWeek(value)
+    setTimeout(() => {
+      addMessage('assistant', OP_QUESTIONS[2])
+      setOpStep(2)
+    }, 300)
+  }
 
-    const pc: PageContext = {
-      niche:       String(negocio?.nicho ?? ''),
-      product:     String(negocio?.produto ?? ''),
-      ticket:      ticketInfo.ticket,
-      ticketLabel: ticketInfo.ticketLabel,
-      audience:    String(publico?.perfil ?? ''),
-      objective:   String(analise?.promessa_central ?? ''),
-    }
+  function handleAudience(label: string, ha: boolean, size?: number) {
+    addMessage('user', label)
+    setHasAudience(ha)
+    setAudienceSize(size)
+    setTimeout(() => {
+      addMessage('assistant', 'Perfeito! Tenho tudo que preciso para montar sua estratégia.')
+      setPhase('ready')
+    }, 300)
+  }
+
+  function handleGenerate() {
+    // Build PageContext: from prop (post_page) or from discovery data (direct)
+    const pc: PageContext = pageContext ?? buildPageContextFromDiscovery(growthDiscovery)
+
     const di: DiscoveryInput = {
-      budget: 'zero',
-      hoursPerWeek: 6,
-      hasAudience: false,
-      hasPostedContent: false,
-      mainGoal: 'first_sale',
+      budget,
+      hoursPerWeek,
+      hasAudience,
+      audienceSize,
+      hasPostedContent: !!(growthDiscovery.tem_conteudo_ativo),
+      mainGoal: (growthDiscovery.objetivo_principal as DiscoveryInput['mainGoal']) ?? 'first_sale',
     }
+
     const state: GrowthState = {
       pageContext: pc,
       discoveryInput: di,
       currentStep: 'strategy',
-      entryMode: 'direct',
+      entryMode: mode,
     }
     saveGrowthState(state)
     router.push('/growth/strategy')
   }
 
-  const quickReplyClass = 'rounded-full border border-[var(--primary)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-fg)] transition-colors'
+  const quickReplyClass =
+    'rounded-full border border-[var(--primary)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-fg)] transition-colors'
 
   return (
     <main className="min-h-screen bg-[var(--bg)] flex flex-col">
@@ -287,8 +274,11 @@ export function DiscoveryChat({ mode, pageContext }: Props) {
               <div className="rounded-2xl rounded-bl-sm bg-[var(--surface-elevated)] px-4 py-3">
                 <div className="flex gap-1">
                   {[0, 1, 2].map((i) => (
-                    <div key={i} className="h-1.5 w-1.5 rounded-full bg-[var(--text-secondary)]"
-                      style={{ animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }} />
+                    <div
+                      key={i}
+                      className="h-1.5 w-1.5 rounded-full bg-[var(--text-secondary)]"
+                      style={{ animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }}
+                    />
                   ))}
                 </div>
               </div>
@@ -300,70 +290,53 @@ export function DiscoveryChat({ mode, pageContext }: Props) {
 
         {/* Footer */}
         <div className="shrink-0 border-t border-[var(--border)] bg-[var(--surface)] p-3">
-          {mode === 'post_page' ? (
-            ppStep === 'done' ? (
-              <button
-                onClick={handleGeneratePostPage}
-                className="w-full rounded-xl bg-[var(--primary)] py-3 text-sm font-bold text-[var(--primary-fg)] hover:opacity-90 transition-opacity"
-              >
-                Gerar minha estratégia →
-              </button>
-            ) : ppStep === 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {BUDGET_OPTIONS.map((opt) => (
-                  <button key={opt.label} onClick={() => handleBudget(opt.label, opt.value)} className={quickReplyClass}>
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            ) : ppStep === 1 ? (
-              <div className="flex flex-wrap gap-2">
-                {HOURS_OPTIONS.map((opt) => (
-                  <button key={opt.label} onClick={() => handleHours(opt.label, opt.value)} className={quickReplyClass}>
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {AUDIENCE_OPTIONS.map((opt) => (
-                  <button key={opt.label} onClick={() => handleAudience(opt.label, opt.hasAudience, opt.audienceSize)} className={quickReplyClass}>
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            )
+          {phase === 'ready' ? (
+            <button
+              onClick={handleGenerate}
+              className="w-full rounded-xl bg-[var(--primary)] py-3 text-sm font-bold text-[var(--primary-fg)] hover:opacity-90 transition-opacity"
+            >
+              Gerar minha estratégia →
+            </button>
+          ) : phase === 'operational' ? (
+            <div className="flex flex-wrap gap-2">
+              {opStep === 0 && BUDGET_OPTIONS.map((opt) => (
+                <button key={opt.label} onClick={() => handleBudget(opt.label, opt.value)} className={quickReplyClass}>
+                  {opt.label}
+                </button>
+              ))}
+              {opStep === 1 && HOURS_OPTIONS.map((opt) => (
+                <button key={opt.label} onClick={() => handleHours(opt.label, opt.value)} className={quickReplyClass}>
+                  {opt.label}
+                </button>
+              ))}
+              {opStep === 2 && AUDIENCE_OPTIONS.map((opt) => (
+                <button key={opt.label} onClick={() => handleAudience(opt.label, opt.hasAudience, opt.audienceSize)} className={quickReplyClass}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           ) : (
-            <div className="flex flex-col gap-2">
-              {briefingIsComplete() && (
-                <button
-                  onClick={handleGenerateDirect}
-                  className="w-full rounded-xl bg-[var(--primary)] py-3 text-sm font-bold text-[var(--primary-fg)] hover:opacity-90 transition-opacity"
-                >
-                  Gerar minha estratégia →
-                </button>
-              )}
-              <div className="flex gap-2 items-end">
-                <textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Digite sua mensagem… (Enter para enviar)"
-                  rows={1}
-                  disabled={isLoading}
-                  className="flex-1 resize-none rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none disabled:opacity-50 transition-colors"
-                  style={{ maxHeight: '120px', overflowY: 'auto' }}
-                />
-                <button
-                  onClick={() => { void sendMessage() }}
-                  disabled={isLoading || !input.trim()}
-                  className="shrink-0 rounded-xl bg-[var(--primary)] p-2.5 text-[var(--primary-fg)] hover:opacity-90 disabled:opacity-40 transition-opacity"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                    <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-                  </svg>
-                </button>
-              </div>
+            // Discovery phase — text input
+            <div className="flex gap-2 items-end">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Digite sua resposta… (Enter para enviar)"
+                rows={1}
+                disabled={isLoading}
+                className="flex-1 resize-none rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:border-[var(--primary)] focus:outline-none disabled:opacity-50 transition-colors"
+                style={{ maxHeight: '120px', overflowY: 'auto' }}
+              />
+              <button
+                onClick={() => { void sendMessage() }}
+                disabled={isLoading || !input.trim()}
+                className="shrink-0 rounded-xl bg-[var(--primary)] p-2.5 text-[var(--primary-fg)] hover:opacity-90 disabled:opacity-40 transition-opacity"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                  <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                </svg>
+              </button>
             </div>
           )}
         </div>
@@ -371,4 +344,17 @@ export function DiscoveryChat({ mode, pageContext }: Props) {
       </div>
     </main>
   )
+}
+
+function buildPageContextFromDiscovery(disc: Record<string, unknown>): PageContext {
+  const ticketMedio = (disc.ticket_medio as TicketMedio) ?? 'ate-97'
+  const ticketInfo = TICKET_MAP[ticketMedio] ?? TICKET_MAP['ate-97']
+  return {
+    product:     String(disc.produto ?? ''),
+    niche:       String(disc.nicho ?? ''),
+    ticket:      ticketInfo.ticket,
+    ticketLabel: ticketInfo.ticketLabel,
+    audience:    String(disc.publico ?? ''),
+    objective:   String(disc.meta_faturamento ?? ''),
+  }
 }
