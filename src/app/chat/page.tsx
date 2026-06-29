@@ -525,16 +525,30 @@ export default function ChatPage() {
     resetPipeline()
   }
 
+  function handleDeleteOne(id: string, e: React.MouseEvent) {
+    e.stopPropagation()
+    localStorage.removeItem(convKey(id))
+    const newHist = history.filter((c) => c.id !== id)
+    saveHistory(newHist)
+    setHistory(newHist)
+    if (id === currentId) {
+      if (newHist.length > 0) {
+        switchConversation(newHist[0].id)
+      } else {
+        setShowHistory(false)
+        createNewConversation([])
+      }
+    }
+  }
+
   function handleClearAll() {
     const ok = window.confirm(
       'Apagar TODAS as conversas? Esta ação é irreversível — não há backup.',
     )
     if (!ok) return
-    // remove todas as chaves de conversa + índice + id atual
     loadHistory().forEach((c) => localStorage.removeItem(convKey(c.id)))
     localStorage.removeItem(STORAGE_HISTORY)
     localStorage.removeItem(STORAGE_CURRENT_ID)
-    // recomeça do zero numa conversa nova e fecha o painel
     setShowHistory(false)
     createNewConversation([])
   }
@@ -839,18 +853,31 @@ export default function ChatPage() {
                     <p className="px-4 py-6 text-center text-xs text-[var(--text-secondary)]">Nenhuma conversa anterior</p>
                   ) : (
                     history.map((conv) => (
-                      <button
+                      <div
                         key={conv.id}
-                        onClick={() => switchConversation(conv.id)}
-                        className={`flex w-full flex-col gap-0.5 px-4 py-3 text-left transition-colors hover:bg-[var(--surface)] ${
+                        className={`group flex items-center gap-1 transition-colors hover:bg-[var(--surface)] ${
                           conv.id === currentId ? 'bg-[var(--surface)] border-l-2 border-[var(--primary)]' : ''
                         }`}
                       >
-                        <span className="truncate text-xs font-medium text-[var(--text-primary)]">{conv.title}</span>
-                        <span className="text-[10px] text-[var(--text-secondary)]">
-                          {conv.messageCount} {conv.messageCount === 1 ? 'mensagem' : 'mensagens'} · {formatDate(conv.createdAt)}
-                        </span>
-                      </button>
+                        <button
+                          onClick={() => switchConversation(conv.id)}
+                          className="flex min-w-0 flex-1 flex-col gap-0.5 px-4 py-3 text-left"
+                        >
+                          <span className="truncate text-xs font-medium text-[var(--text-primary)]">{conv.title}</span>
+                          <span className="text-[10px] text-[var(--text-secondary)]">
+                            {conv.messageCount} {conv.messageCount === 1 ? 'mensagem' : 'mensagens'} · {formatDate(conv.createdAt)}
+                          </span>
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteOne(conv.id, e)}
+                          title="Apagar conversa"
+                          className="mr-2 shrink-0 rounded p-1 text-[var(--text-secondary)] opacity-0 transition-opacity hover:text-red-400 group-hover:opacity-100"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                          </svg>
+                        </button>
+                      </div>
                     ))
                   )}
                 </div>
