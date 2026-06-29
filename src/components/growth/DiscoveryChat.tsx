@@ -240,7 +240,7 @@ export function DiscoveryChat({ mode, pageContext }: Props) {
         {/* Header */}
         <div className="shrink-0 flex items-center gap-3 px-4 py-3 border-b border-[var(--border)]">
           <button
-            onClick={() => router.push('/growth')}
+            onClick={() => router.back()}
             className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
           >
             ← Voltar
