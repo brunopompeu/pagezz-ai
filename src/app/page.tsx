@@ -176,7 +176,7 @@ export default function Home() {
                 </button>
               ) : (
                 <button
-                  onClick={() => router.push("/growth")}
+                  onClick={() => router.push("/growth/discovery?mode=direct")}
                   className="flex items-center gap-2 rounded-[10px] bg-[var(--eduzz-blue)] px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--eduzz-blue)] focus-visible:ring-offset-2"
                 >
                   <ArrowIcon />
