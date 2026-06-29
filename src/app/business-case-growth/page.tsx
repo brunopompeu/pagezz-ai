@@ -170,14 +170,14 @@ export default function BusinessCaseGrowth() {
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Card className="bg-[var(--eduzz-blue)] text-white">
+              <div className="rounded-[20px] bg-[var(--eduzz-blue)] p-6 shadow-[0_4px_24px_rgba(13,39,114,0.07)]">
                 <span className="inline-block rounded-full bg-[rgba(255,193,7,0.2)] px-3 py-1 text-[0.62rem] font-bold uppercase tracking-wide text-[var(--eduzz-yellow)]">⭐ Prioritário · Retenção</span>
                 <p className="mt-4 text-2xl">📄→📣</p>
-                <p className="mt-2 text-[0.95rem] font-extrabold">Modo 1 — Pós-página</p>
+                <p className="mt-2 text-[0.95rem] font-extrabold text-white">Modo 1 — Pós-página</p>
                 <p className="mt-2 text-[0.83rem] leading-relaxed text-white/70">
                   Página gerada e refinada. Botão fixo no /preview: <strong className="text-white">"E agora, como divulgo isso?"</strong> Contexto já carregado. Discovery de 2 perguntas. Produtor está no pico de confiança — é o momento perfeito.
                 </p>
-              </Card>
+              </div>
               <Card>
                 <span className="inline-block rounded-full bg-[rgba(13,39,114,0.07)] px-3 py-1 text-[0.62rem] font-bold uppercase tracking-wide text-[rgba(13,39,114,0.45)]">🚀 Aquisição</span>
                 <p className="mt-4 text-2xl">🌐→📣</p>
