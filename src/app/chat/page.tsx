@@ -98,6 +98,7 @@ interface ConversationData {
   briefing: Partial<Briefing>
   design: Design
   isCustomDesign?: boolean
+  strategy?: Strategy | null
 }
 
 interface CopyStrategyResult {
@@ -317,6 +318,7 @@ export default function ChatPage() {
   const [isCustomDesign, setIsCustomDesign] = useState(false)
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [viewMode, setViewMode] = useState<'chat' | 'pipeline'>('pipeline')
   const [strategyStatus, setStrategyStatus] = useState<StrategyStatus>('idle')
   const [strategy, setStrategy] = useState<Strategy | null>(null)
   const [selectedPageType, setSelectedPageType] = useState<string>('')
@@ -376,6 +378,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (!briefing.meta?.discovery_completo || strategyTriggered.current) return
     strategyTriggered.current = true
+    setViewMode('pipeline')
     setStrategyStatus('running')
     const postJson = async (url: string) => {
       const r = await fetch(url, {
@@ -400,8 +403,14 @@ export default function ChatPage() {
         // normaliza arrays opcionais para o render nunca quebrar
         pageTypeRecommendation.alternativas = pageTypeRecommendation.alternativas ?? []
         pageTypeRecommendation.elementos_conversao = pageTypeRecommendation.elementos_conversao ?? []
-        setStrategy({ copyStrategy, pageTypeRecommendation })
+        const computed: Strategy = { copyStrategy, pageTypeRecommendation }
+        setStrategy(computed)
         setStrategyStatus('done')
+        // persist strategy so it can be restored when switching back to this conversation
+        if (currentId) {
+          const existing = loadConvData(currentId)
+          if (existing) saveConvData(currentId, { ...existing, strategy: computed })
+        }
       })
       .catch((err) => {
         console.error('[strategy]', err)
@@ -497,6 +506,7 @@ export default function ChatPage() {
     setIsCustomDesign(false)
     setShowHistory(false)
     resetPipeline()
+    setViewMode('pipeline')
   }
 
   function handleNewConversation() {
@@ -523,6 +533,16 @@ export default function ChatPage() {
     setIsCustomDesign(conv.isCustomDesign ?? false)
     setShowHistory(false)
     resetPipeline()
+    // Always restore to chat view when switching conversations.
+    // Prevent the strategy useEffect from re-running for loaded conversations.
+    setViewMode('chat')
+    strategyTriggered.current = true
+    if (conv.strategy) {
+      setStrategy(conv.strategy)
+      setStrategyStatus('done')
+      setSelectedPageType(conv.strategy.pageTypeRecommendation.tipo_recomendado)
+      setSelectedElements(new Set(conv.strategy.pageTypeRecommendation.elementos_conversao.map((e) => e.elemento)))
+    }
   }
 
   function handleDeleteOne(id: string, e: React.MouseEvent) {
@@ -776,7 +796,9 @@ export default function ChatPage() {
   const isFinished = Boolean(briefing.analise_produto?.promessa_central)
 
   const chatView: 'chat' | 'strategy-loading' | 'strategy-ready' | 'strategy-error' | 'briefing-room' | 'generating' | 'preview' =
-    generatedHtml
+    viewMode === 'chat'
+      ? 'chat'
+      : generatedHtml
       ? 'preview'
       : generationStatus !== 'idle'
       ? 'generating'
@@ -958,6 +980,22 @@ export default function ChatPage() {
                 <div ref={messagesEndRef} />
               </div>
 
+              {/* CTA banner: discovery done, strategy available */}
+              {briefing.meta?.discovery_completo && strategy && (
+                <div className="shrink-0 mx-4 mb-3 flex items-center justify-between gap-3 rounded-xl border border-[var(--primary)]/30 bg-[var(--primary)]/8 px-4 py-3">
+                  <div>
+                    <p className="text-xs font-semibold text-[var(--text-primary)]">Discovery concluído</p>
+                    <p className="text-[11px] text-[var(--text-secondary)]">A estratégia da sua página já foi gerada</p>
+                  </div>
+                  <button
+                    onClick={() => setViewMode('pipeline')}
+                    className="shrink-0 rounded-lg bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-[var(--primary-fg)] hover:opacity-90 transition-opacity"
+                  >
+                    Ver estratégia →
+                  </button>
+                </div>
+              )}
+
               {/* Input */}
               <div className="shrink-0 border-t border-[var(--border)] bg-[var(--surface)] p-3">
                 <div className="flex gap-2 items-end">
@@ -1054,9 +1092,18 @@ export default function ChatPage() {
             <div className="mx-auto w-full max-w-xl space-y-6">
 
               {/* Header */}
-              <div>
-                <p className="text-xs uppercase tracking-widest text-[var(--text-secondary)] mb-1">Estratégia definida</p>
-                <h2 className="text-xl font-semibold text-[var(--text-primary)]">Tipo de página recomendado</h2>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-[var(--text-secondary)] mb-1">Estratégia definida</p>
+                  <h2 className="text-xl font-semibold text-[var(--text-primary)]">Tipo de página recomendado</h2>
+                </div>
+                <button
+                  onClick={() => setViewMode('chat')}
+                  className="shrink-0 mt-1 flex items-center gap-1 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] transition-colors"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                  Ver chat
+                </button>
               </div>
 
               {/* Tipo recomendado */}
