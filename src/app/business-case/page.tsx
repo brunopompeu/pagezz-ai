@@ -72,10 +72,7 @@ export default function BusinessCase() {
         <Section className="pt-10">
           <div className="flex flex-col items-center gap-5 text-center">
             <Tag>Business Case · Pagezz AI · Jun 2026</Tag>
-            <h1
-              className="max-w-3xl text-[clamp(1.9rem,5.5vw,3.4rem)] font-bold leading-[1.12] tracking-[-0.02em] text-[var(--eduzz-blue)]"
-              style={{ fontFamily: "var(--font-syne)" }}
-            >
+            <h1 className="max-w-3xl text-[clamp(2.4rem,7vw,4rem)] font-black leading-[1.04] tracking-[-0.04em]">
               O primeiro motor de IA<br />para páginas de venda<br />em português
             </h1>
             <p className="max-w-xl text-[0.95rem] leading-[1.7] text-[rgba(13,39,114,0.65)]">
