@@ -375,16 +375,13 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading])
 
-  useEffect(() => {
-    if (!briefing.meta?.discovery_completo || strategyTriggered.current) return
-    strategyTriggered.current = true
-    setViewMode('pipeline')
+  function runStrategy(convId: string | null, currentBriefing: Partial<Briefing>) {
     setStrategyStatus('running')
     const postJson = async (url: string) => {
       const r = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ briefing }),
+        body: JSON.stringify({ briefing: currentBriefing }),
       })
       const data = await r.json().catch(() => null)
       if (!r.ok || !data || data.error) {
@@ -400,22 +397,28 @@ export default function ChatPage() {
         if (!pageTypeRecommendation?.tipo_recomendado) {
           throw new Error('page-type sem tipo_recomendado')
         }
-        // normaliza arrays opcionais para o render nunca quebrar
         pageTypeRecommendation.alternativas = pageTypeRecommendation.alternativas ?? []
         pageTypeRecommendation.elementos_conversao = pageTypeRecommendation.elementos_conversao ?? []
         const computed: Strategy = { copyStrategy, pageTypeRecommendation }
         setStrategy(computed)
         setStrategyStatus('done')
-        // persist strategy so it can be restored when switching back to this conversation
-        if (currentId) {
-          const existing = loadConvData(currentId)
-          if (existing) saveConvData(currentId, { ...existing, strategy: computed })
+        if (convId) {
+          const existing = loadConvData(convId)
+          if (existing) saveConvData(convId, { ...existing, strategy: computed })
         }
       })
       .catch((err) => {
         console.error('[strategy]', err)
         setStrategyStatus('error')
       })
+  }
+
+  useEffect(() => {
+    if (!briefing.meta?.discovery_completo || strategyTriggered.current) return
+    strategyTriggered.current = true
+    setViewMode('pipeline')
+    runStrategy(currentId, briefing)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [briefing, briefing.meta?.discovery_completo])
 
   useEffect(() => {
@@ -980,19 +983,30 @@ export default function ChatPage() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* CTA banner: discovery done, strategy available */}
-              {briefing.meta?.discovery_completo && strategy && (
+              {/* CTA banner: discovery done */}
+              {briefing.meta?.discovery_completo && (
                 <div className="shrink-0 mx-4 mb-3 flex items-center justify-between gap-3 rounded-xl border border-[var(--primary)]/30 bg-[var(--primary)]/8 px-4 py-3">
                   <div>
                     <p className="text-xs font-semibold text-[var(--text-primary)]">Discovery concluído</p>
-                    <p className="text-[11px] text-[var(--text-secondary)]">A estratégia da sua página já foi gerada</p>
+                    <p className="text-[11px] text-[var(--text-secondary)]">
+                      {strategy ? 'A estratégia da sua página já foi gerada' : 'Gere a estratégia para continuar'}
+                    </p>
                   </div>
-                  <button
-                    onClick={() => setViewMode('pipeline')}
-                    className="shrink-0 rounded-lg bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-[var(--primary-fg)] hover:opacity-90 transition-opacity"
-                  >
-                    Ver estratégia →
-                  </button>
+                  {strategy ? (
+                    <button
+                      onClick={() => setViewMode('pipeline')}
+                      className="shrink-0 rounded-lg bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-[var(--primary-fg)] hover:opacity-90 transition-opacity"
+                    >
+                      Ver estratégia →
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { setViewMode('pipeline'); strategyTriggered.current = false; runStrategy(currentId, briefing) }}
+                      className="shrink-0 rounded-lg bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-[var(--primary-fg)] hover:opacity-90 transition-opacity"
+                    >
+                      Gerar estratégia →
+                    </button>
+                  )}
                 </div>
               )}
 
