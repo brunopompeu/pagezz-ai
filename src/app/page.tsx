@@ -85,19 +85,14 @@ export default function Home() {
               <p className="text-lg font-extrabold tracking-tight">Pagezz AI</p>
               <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[rgba(13,39,114,0.56)]">Eduzz Intelligence</p>
             </div>
-            <span className="hidden items-center gap-1.5 rounded-full border border-[rgba(13,39,114,0.15)] px-3 py-1 text-[0.58rem] font-bold uppercase tracking-[0.18em] text-[rgba(13,39,114,0.45)] md:inline-flex">
-              Business Case
-            </span>
           </div>
 
-          <nav className="hidden items-center gap-0.5 md:flex">
-            <span className="cursor-not-allowed rounded-full px-3 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.5px] text-[rgba(13,39,114,0.35)] transition-colors">Estratégia</span>
-            <Link href="/business-case" className="rounded-full px-3 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.5px] text-[rgba(13,39,114,0.75)] transition-colors hover:bg-[rgba(13,39,114,0.06)] hover:text-[var(--eduzz-blue)]">Página</Link>
+          <nav className="hidden items-center gap-1 md:flex">
+            <span className="cursor-not-allowed rounded-full px-3.5 py-2 text-[0.68rem] font-bold tracking-[0.3px] text-[rgba(13,39,114,0.30)] transition-colors">BC Growth com Agentes</span>
+            <Link href="/business-case" className="rounded-full px-3.5 py-2 text-[0.68rem] font-bold tracking-[0.3px] text-[rgba(13,39,114,0.75)] transition-colors hover:bg-[rgba(13,39,114,0.06)] hover:text-[var(--eduzz-blue)]">BC Páginas com Agentes</Link>
           </nav>
 
-          <span className="hidden rounded-full bg-[var(--eduzz-yellow)] px-5 py-3 text-sm font-extrabold text-[var(--eduzz-blue)] sm:inline-flex">
-            IA para vender melhor
-          </span>
+          <div />
         </header>
 
         {/* HERO */}
