@@ -88,7 +88,7 @@ export default function Home() {
           </div>
 
           <nav className="hidden items-center gap-1 md:flex">
-            <span className="cursor-not-allowed rounded-full px-3.5 py-2 text-[0.68rem] font-bold tracking-[0.3px] text-[rgba(13,39,114,0.30)] transition-colors">BC Growth com Agentes</span>
+            <Link href="/business-case-growth" className="rounded-full px-3.5 py-2 text-[0.68rem] font-bold tracking-[0.3px] text-[rgba(13,39,114,0.75)] transition-colors hover:bg-[rgba(13,39,114,0.06)] hover:text-[var(--eduzz-blue)]">BC Growth com Agentes</Link>
             <Link href="/business-case" className="rounded-full px-3.5 py-2 text-[0.68rem] font-bold tracking-[0.3px] text-[rgba(13,39,114,0.75)] transition-colors hover:bg-[rgba(13,39,114,0.06)] hover:text-[var(--eduzz-blue)]">BC Páginas com Agentes</Link>
           </nav>
 
