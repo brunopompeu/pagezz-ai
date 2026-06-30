@@ -11,6 +11,25 @@ interface Message {
   text: string
 }
 
+interface ConversationSummary {
+  id: string
+  title: string
+  createdAt: number
+  messageCount: number
+}
+
+interface ConvData {
+  messages: Message[]
+  growthDiscovery: Record<string, unknown>
+  apiHistory: { role: string; content: string }[]
+  phase: Phase
+  opStep: OpStep
+  budget: DiscoveryInput['budget']
+  hoursPerWeek: number
+  hasAudience: boolean
+  audienceSize: number | undefined
+}
+
 interface Props {
   mode: 'post_page' | 'direct'
   pageContext: PageContext | null
@@ -47,7 +66,7 @@ const AUDIENCE_OPTIONS: { label: string; hasAudience: boolean; audienceSize?: nu
 ]
 
 type Phase = 'discovery' | 'operational' | 'ready'
-type OpStep = 0 | 1 | 2  // 0=budget, 1=hours, 2=audience
+type OpStep = 0 | 1 | 2
 
 const OP_QUESTIONS = [
   'Você tem verba pra investir em anúncios?',
@@ -55,11 +74,65 @@ const OP_QUESTIONS = [
   'Você já tem audiência? (seguidores, lista de e-mail, grupo)',
 ]
 
+// ─── Storage ──────────────────────────────────────────────────────────────────
+
+const STORAGE_HISTORY = 'pagezz_growth_history'
+const STORAGE_CURRENT_ID = 'pagezz_growth_current_id'
+const convKey = (id: string) => `pagezz_growth_conv_${id}`
+
+function generateId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
+}
+
+function generateTitle(messages: Message[]): string {
+  const first = messages.find((m) => m.role === 'user')
+  if (!first) return 'Nova conversa'
+  const t = first.text.slice(0, 45)
+  return t.length < first.text.length ? t + '…' : t
+}
+
+function formatDate(ts: number): string {
+  const diff = Date.now() - ts
+  if (diff < 60_000) return 'agora'
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}min atrás`
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h atrás`
+  return new Date(ts).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+}
+
+function loadHistory(): ConversationSummary[] {
+  try { return JSON.parse(localStorage.getItem(STORAGE_HISTORY) ?? '[]') } catch { return [] }
+}
+function saveHistory(h: ConversationSummary[]) { localStorage.setItem(STORAGE_HISTORY, JSON.stringify(h)) }
+
+function loadConvData(id: string): ConvData | null {
+  try {
+    const r = localStorage.getItem(convKey(id))
+    if (!r) return null
+    return JSON.parse(r) as ConvData
+  } catch { return null }
+}
+function saveConvData(id: string, d: ConvData) { localStorage.setItem(convKey(id), JSON.stringify(d)) }
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export function DiscoveryChat({ mode, pageContext }: Props) {
   const router = useRouter()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const historyRef = useRef<HTMLDivElement>(null)
 
-  const [messages, setMessages] = useState<Message[]>([])
+  const initText = mode === 'post_page' && pageContext
+    ? `Sua página para "${pageContext.product}" está pronta. Agora vamos montar o plano de divulgação. Você tem perfis em redes sociais hoje? Me conta quais e quantos seguidores você tem.`
+    : 'Oi! Vou te ajudar a montar um plano de divulgação completo. Primeiro me conta: qual é o seu produto e para quem ele é?'
+
+  const initialMessage: Message = { id: 'init', role: 'assistant', text: initText }
+
+  // Conversation management
+  const [currentId, setCurrentId] = useState<string | null>(null)
+  const [history, setHistory] = useState<ConversationSummary[]>([])
+  const [showHistory, setShowHistory] = useState(false)
+  const [confirmNew, setConfirmNew] = useState(false)
+
+  const [messages, setMessages] = useState<Message[]>([initialMessage])
   const [isLoading, setIsLoading] = useState(false)
   const [input, setInput] = useState('')
   const [apiHistory, setApiHistory] = useState<{ role: string; content: string }[]>([])
@@ -75,37 +148,184 @@ export function DiscoveryChat({ mode, pageContext }: Props) {
   const [hasAudience, setHasAudience] = useState<boolean>(false)
   const [audienceSize, setAudienceSize] = useState<number | undefined>(undefined)
 
-  function addMessage(role: 'user' | 'assistant', text: string) {
-    setMessages(prev => [...prev, { id: `${Date.now()}-${Math.random()}`, role, text }])
-  }
+  // ── Init ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    const initText = mode === 'post_page' && pageContext
-      ? `Sua página para "${pageContext.product}" está pronta. Agora vamos montar o plano de divulgação. Você tem perfis em redes sociais hoje? Me conta quais e quantos seguidores você tem.`
-      : 'Oi! Vou te ajudar a montar um plano de divulgação completo. Primeiro me conta: qual é o seu produto e para quem ele é?'
-    setMessages([{ id: 'init', role: 'assistant', text: initText }])
-  }, [mode, pageContext])
+    const savedHistory = loadHistory()
+    setHistory(savedHistory)
+
+    const savedId = localStorage.getItem(STORAGE_CURRENT_ID)
+    if (savedId) {
+      const conv = loadConvData(savedId)
+      if (conv && conv.messages.length > 0) {
+        setCurrentId(savedId)
+        setMessages(conv.messages)
+        setGrowthDiscovery(conv.growthDiscovery ?? {})
+        setApiHistory(conv.apiHistory ?? [])
+        setPhase(conv.phase ?? 'discovery')
+        setOpStep((conv.opStep ?? 0) as OpStep)
+        setBudget(conv.budget ?? 'zero')
+        setHoursPerWeek(conv.hoursPerWeek ?? 6)
+        setHasAudience(conv.hasAudience ?? false)
+        setAudienceSize(conv.audienceSize)
+        return
+      }
+    }
+
+    createNewConversation(savedHistory)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (historyRef.current && !historyRef.current.contains(e.target as Node)) {
+        setShowHistory(false)
+      }
+    }
+    if (showHistory) document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [showHistory])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading])
 
+  // ── Conversation management ────────────────────────────────────────────────
+
+  function createNewConversation(hist: ConversationSummary[]) {
+    const newId = generateId()
+    const newSummary: ConversationSummary = {
+      id: newId,
+      title: 'Nova conversa',
+      createdAt: Date.now(),
+      messageCount: 0,
+    }
+    const newHist = [newSummary, ...hist]
+    saveConvData(newId, {
+      messages: [initialMessage],
+      growthDiscovery: {},
+      apiHistory: [],
+      phase: 'discovery',
+      opStep: 0,
+      budget: 'zero',
+      hoursPerWeek: 6,
+      hasAudience: false,
+      audienceSize: undefined,
+    })
+    saveHistory(newHist)
+    localStorage.setItem(STORAGE_CURRENT_ID, newId)
+
+    setCurrentId(newId)
+    setHistory(newHist)
+    setMessages([initialMessage])
+    setGrowthDiscovery({})
+    setApiHistory([])
+    setPhase('discovery')
+    setOpStep(0)
+    setBudget('zero')
+    setHoursPerWeek(6)
+    setHasAudience(false)
+    setAudienceSize(undefined)
+    setInput('')
+    setShowHistory(false)
+  }
+
+  function handleNewConversation() {
+    const hasProgress = messages.some((m) => m.role === 'user')
+    if (hasProgress) {
+      setConfirmNew(true)
+    } else {
+      setShowHistory(false)
+    }
+  }
+
+  function switchConversation(id: string) {
+    if (id === currentId) { setShowHistory(false); return }
+    const conv = loadConvData(id)
+    if (!conv) return
+    localStorage.setItem(STORAGE_CURRENT_ID, id)
+    setCurrentId(id)
+    setMessages(conv.messages.length > 0 ? conv.messages : [initialMessage])
+    setGrowthDiscovery(conv.growthDiscovery ?? {})
+    setApiHistory(conv.apiHistory ?? [])
+    setPhase(conv.phase ?? 'discovery')
+    setOpStep((conv.opStep ?? 0) as OpStep)
+    setBudget(conv.budget ?? 'zero')
+    setHoursPerWeek(conv.hoursPerWeek ?? 6)
+    setHasAudience(conv.hasAudience ?? false)
+    setAudienceSize(conv.audienceSize)
+    setInput('')
+    setShowHistory(false)
+  }
+
+  function handleDeleteOne(id: string, e: React.MouseEvent) {
+    e.stopPropagation()
+    localStorage.removeItem(convKey(id))
+    const newHist = history.filter((c) => c.id !== id)
+    saveHistory(newHist)
+    setHistory(newHist)
+    if (id === currentId) {
+      if (newHist.length > 0) {
+        switchConversation(newHist[0].id)
+      } else {
+        setShowHistory(false)
+        createNewConversation([])
+      }
+    }
+  }
+
+  function persistConv(
+    id: string,
+    msgs: Message[],
+    disc: Record<string, unknown>,
+    apiHist: { role: string; content: string }[],
+    ph: Phase,
+    step: OpStep,
+    bgt: DiscoveryInput['budget'],
+    hrs: number,
+    ha: boolean,
+    as_: number | undefined,
+  ) {
+    saveConvData(id, {
+      messages: msgs,
+      growthDiscovery: disc,
+      apiHistory: apiHist,
+      phase: ph,
+      opStep: step,
+      budget: bgt,
+      hoursPerWeek: hrs,
+      hasAudience: ha,
+      audienceSize: as_,
+    })
+    const currentHist = loadHistory()
+    const userCount = msgs.filter((m) => m.role === 'user').length
+    const title = generateTitle(msgs)
+    const newHist = currentHist.map((h) => (h.id === id ? { ...h, title, messageCount: userCount } : h))
+    saveHistory(newHist)
+    setHistory(newHist)
+  }
+
+  // ── Send message ──────────────────────────────────────────────────────────
+
   async function sendMessage() {
     const text = input.trim()
-    if (!text || isLoading) return
+    if (!text || isLoading || !currentId) return
     setInput('')
-    addMessage('user', text)
+
+    const userMsg: Message = { id: `${Date.now()}-u`, role: 'user', text }
+    const nextMessages = [...messages, userMsg]
+    setMessages(nextMessages)
     setIsLoading(true)
 
-    const newHistory = [...apiHistory, { role: 'user', content: text }]
-    setApiHistory(newHistory)
+    const newApiHistory = [...apiHistory, { role: 'user', content: text }]
+    setApiHistory(newApiHistory)
 
     try {
       const res = await fetch('/api/agents/growth/discovery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: newHistory,
+          messages: newApiHistory,
           pageContext: mode === 'post_page' ? pageContext : undefined,
         }),
       })
@@ -130,6 +350,7 @@ export function DiscoveryChat({ mode, pageContext }: Props) {
 
       let displayText = accumulated
       let discoveryComplete = false
+      let newDiscovery = growthDiscovery
 
       try {
         const parsed = JSON.parse(accumulated) as {
@@ -141,31 +362,39 @@ export function DiscoveryChat({ mode, pageContext }: Props) {
         if (parsed.message) displayText = parsed.message
 
         if (parsed.growth_discovery_update) {
-          setGrowthDiscovery(prev => {
-            const next = { ...prev }
-            for (const [k, v] of Object.entries(parsed.growth_discovery_update!)) {
-              if (v !== null && v !== undefined) next[k] = v
-            }
-            return next
-          })
+          newDiscovery = { ...growthDiscovery }
+          for (const [k, v] of Object.entries(parsed.growth_discovery_update)) {
+            if (v !== null && v !== undefined) newDiscovery[k] = v
+          }
+          setGrowthDiscovery(newDiscovery)
         }
 
         if (parsed.meta?.growth_discovery_completo) {
           discoveryComplete = true
         }
-      } catch { /* raw text, use accumulated */ }
+      } catch { /* raw text */ }
 
-      addMessage('assistant', displayText)
-      setApiHistory(prev => [...prev, { role: 'assistant', content: displayText }])
+      const assistantMsg: Message = { id: `${Date.now()}-a`, role: 'assistant', text: displayText }
+      const finalMessages = [...nextMessages, assistantMsg]
+      setMessages(finalMessages)
+
+      const finalApiHistory = [...newApiHistory, { role: 'assistant', content: displayText }]
+      setApiHistory(finalApiHistory)
+
+      persistConv(currentId, finalMessages, newDiscovery, finalApiHistory, phase, opStep, budget, hoursPerWeek, hasAudience, audienceSize)
 
       if (discoveryComplete) {
         setTimeout(() => {
-          addMessage('assistant', OP_QUESTIONS[0])
+          const opMsg: Message = { id: `${Date.now()}-op`, role: 'assistant', text: OP_QUESTIONS[0] }
+          const opMessages = [...finalMessages, opMsg]
+          setMessages(opMessages)
           setPhase('operational')
+          persistConv(currentId, opMessages, newDiscovery, finalApiHistory, 'operational', 0, budget, hoursPerWeek, hasAudience, audienceSize)
         }, 600)
       }
     } catch {
-      addMessage('assistant', 'Desculpe, tive um problema técnico. Pode tentar novamente?')
+      const errMsg: Message = { id: `${Date.now()}-err`, role: 'assistant', text: 'Desculpe, tive um problema técnico. Pode tentar novamente?' }
+      setMessages(prev => [...prev, errMsg])
     } finally {
       setIsLoading(false)
     }
@@ -178,48 +407,61 @@ export function DiscoveryChat({ mode, pageContext }: Props) {
     }
   }
 
-  // Operational handlers
+  // ── Operational handlers ──────────────────────────────────────────────────
+
   function handleBudget(label: string, value: DiscoveryInput['budget']) {
-    addMessage('user', label)
+    const userMsg: Message = { id: `${Date.now()}-u`, role: 'user', text: label }
+    const msgs = [...messages, userMsg]
+    setMessages(msgs)
     setBudget(value)
     setTimeout(() => {
-      addMessage('assistant', OP_QUESTIONS[1])
+      const opMsg: Message = { id: `${Date.now()}-op`, role: 'assistant', text: OP_QUESTIONS[1] }
+      const newMsgs = [...msgs, opMsg]
+      setMessages(newMsgs)
       setOpStep(1)
+      if (currentId) persistConv(currentId, newMsgs, growthDiscovery, apiHistory, 'operational', 1, value, hoursPerWeek, hasAudience, audienceSize)
     }, 300)
   }
 
   function handleHours(label: string, value: number) {
-    addMessage('user', label)
+    const userMsg: Message = { id: `${Date.now()}-u`, role: 'user', text: label }
+    const msgs = [...messages, userMsg]
+    setMessages(msgs)
     setHoursPerWeek(value)
     setTimeout(() => {
-      addMessage('assistant', OP_QUESTIONS[2])
+      const opMsg: Message = { id: `${Date.now()}-op`, role: 'assistant', text: OP_QUESTIONS[2] }
+      const newMsgs = [...msgs, opMsg]
+      setMessages(newMsgs)
       setOpStep(2)
+      if (currentId) persistConv(currentId, newMsgs, growthDiscovery, apiHistory, 'operational', 2, budget, value, hasAudience, audienceSize)
     }, 300)
   }
 
   function handleAudience(label: string, ha: boolean, size?: number) {
-    addMessage('user', label)
+    const userMsg: Message = { id: `${Date.now()}-u`, role: 'user', text: label }
+    const msgs = [...messages, userMsg]
+    setMessages(msgs)
     setHasAudience(ha)
     setAudienceSize(size)
     setTimeout(() => {
-      addMessage('assistant', 'Perfeito! Tenho tudo que preciso para montar sua estratégia.')
+      const doneMsg: Message = { id: `${Date.now()}-done`, role: 'assistant', text: 'Perfeito! Tenho tudo que preciso para montar sua estratégia.' }
+      const newMsgs = [...msgs, doneMsg]
+      setMessages(newMsgs)
       setPhase('ready')
+      if (currentId) persistConv(currentId, newMsgs, growthDiscovery, apiHistory, 'ready', opStep, budget, hoursPerWeek, ha, size)
     }, 300)
   }
 
   function handleGenerate() {
-    // Build PageContext: from prop (post_page) or from discovery data (direct)
     const pc: PageContext = pageContext ?? buildPageContextFromDiscovery(growthDiscovery)
-
     const di: DiscoveryInput = {
       budget,
       hoursPerWeek,
       hasAudience,
       audienceSize,
       hasPostedContent: !!(growthDiscovery.tem_conteudo_ativo),
-      mainGoal: (growthDiscovery.objetivo_principal as DiscoveryInput['mainGoal']) ?? 'first_sale',
+      mainGoal: (growthDiscovery.mainGoal as DiscoveryInput['mainGoal']) ?? 'first_sale',
     }
-
     const state: GrowthState = {
       pageContext: pc,
       discoveryInput: di,
@@ -230,22 +472,131 @@ export function DiscoveryChat({ mode, pageContext }: Props) {
     router.push('/growth/strategy')
   }
 
+  // Show early "Ir para a estratégia" once 3+ user exchanges and some discovery data collected
+  const userMessageCount = messages.filter((m) => m.role === 'user').length
+  const canProceedEarly = phase === 'discovery' && userMessageCount >= 3 && Object.keys(growthDiscovery).length > 0
+
   const quickReplyClass =
     'rounded-full border border-[var(--primary)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-fg)] transition-colors'
 
   return (
     <main className="min-h-screen bg-[var(--bg)] flex flex-col">
+
+      {/* Confirmation dialog */}
+      {confirmNew && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-80 rounded-2xl bg-[var(--surface-elevated)] p-6 shadow-2xl border border-[var(--border)]">
+            <h3 className="text-base font-semibold text-[var(--text-primary)]">Iniciar nova conversa?</h3>
+            <p className="mt-2 text-sm text-[var(--text-secondary)] leading-relaxed">
+              A conversa atual fica salva no histórico e você pode retomá-la a qualquer momento.
+            </p>
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => setConfirmNew(false)}
+                className="flex-1 rounded-xl border border-[var(--border)] py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => { setConfirmNew(false); createNewConversation(loadHistory()) }}
+                className="flex-1 rounded-xl bg-[var(--primary)] py-2 text-sm font-semibold text-[var(--primary-fg)] hover:opacity-90 transition-opacity"
+              >
+                Nova conversa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 flex flex-col max-w-2xl w-full mx-auto">
 
         {/* Header */}
-        <div className="shrink-0 flex items-center gap-3 px-4 py-3 border-b border-[var(--border)]">
-          <button
-            onClick={() => router.back()}
-            className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-          >
-            ← Voltar
-          </button>
-          <span className="text-sm font-semibold text-[var(--text-primary)]">Discovery</span>
+        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.back()}
+              className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            >
+              ← Voltar
+            </button>
+            <span className="text-sm font-semibold text-[var(--text-primary)]">Discovery</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* History dropdown */}
+            <div ref={historyRef} className="relative">
+              <button
+                onClick={() => setShowHistory((v) => !v)}
+                className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="1 4 1 10 7 10"/>
+                  <polyline points="23 20 23 14 17 14"/>
+                  <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                </svg>
+                Histórico
+                {history.length > 0 && (
+                  <span className="rounded-full bg-[var(--surface-elevated)] px-1.5 text-[10px] font-medium">
+                    {history.length}
+                  </span>
+                )}
+              </button>
+
+              {showHistory && (
+                <div className="absolute right-0 top-full z-40 mt-1 w-72 rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] shadow-2xl overflow-hidden">
+                  <div className="max-h-72 overflow-y-auto">
+                    {history.length === 0 ? (
+                      <p className="px-4 py-6 text-center text-xs text-[var(--text-secondary)]">Nenhuma conversa anterior</p>
+                    ) : (
+                      history.map((conv) => (
+                        <div
+                          key={conv.id}
+                          className={`group flex items-center gap-1 transition-colors hover:bg-[var(--surface)] ${
+                            conv.id === currentId ? 'bg-[var(--surface)] border-l-2 border-[var(--primary)]' : ''
+                          }`}
+                        >
+                          <button
+                            onClick={() => switchConversation(conv.id)}
+                            className="flex min-w-0 flex-1 flex-col gap-0.5 px-4 py-3 text-left"
+                          >
+                            <span className="truncate text-xs font-medium text-[var(--text-primary)]">{conv.title}</span>
+                            <span className="text-[10px] text-[var(--text-secondary)]">
+                              {conv.messageCount} {conv.messageCount === 1 ? 'mensagem' : 'mensagens'} · {formatDate(conv.createdAt)}
+                            </span>
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteOne(conv.id, e)}
+                            title="Apagar conversa"
+                            className="mr-2 shrink-0 rounded-md p-1.5 text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 hover:bg-[var(--border)] hover:text-red-400 transition-all"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6"/>
+                              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                              <path d="M10 11v6"/><path d="M14 11v6"/>
+                              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                            </svg>
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* New conversation button */}
+            <button
+              onClick={handleNewConversation}
+              title="Nova conversa"
+              className="flex items-center gap-1.5 rounded-lg border border-[var(--border)] px-2.5 py-1 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Novo
+            </button>
+          </div>
         </div>
 
         {/* Product context card — post_page only */}
@@ -289,7 +640,18 @@ export function DiscoveryChat({ mode, pageContext }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="shrink-0 border-t border-[var(--border)] bg-[var(--surface)] p-3">
+        <div className="shrink-0 border-t border-[var(--border)] bg-[var(--surface)] p-3 space-y-2">
+
+          {/* Early strategy CTA — appears after 3+ exchanges with enough discovery data */}
+          {canProceedEarly && (
+            <button
+              onClick={handleGenerate}
+              className="w-full rounded-xl border border-[var(--primary)] py-2 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--primary-fg)] transition-colors"
+            >
+              Ir para a estratégia →
+            </button>
+          )}
+
           {phase === 'ready' ? (
             <button
               onClick={handleGenerate}
