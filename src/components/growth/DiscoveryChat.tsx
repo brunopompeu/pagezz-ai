@@ -235,6 +235,17 @@ export function DiscoveryChat({ mode, pageContext }: Props) {
     if (hasProgress) {
       setConfirmNew(true)
     } else {
+      // Current conversation is empty — reset in place without creating a new entry
+      setMessages([initialMessage])
+      setGrowthDiscovery({})
+      setApiHistory([])
+      setPhase('discovery')
+      setOpStep(0)
+      setBudget('zero')
+      setHoursPerWeek(6)
+      setHasAudience(false)
+      setAudienceSize(undefined)
+      setInput('')
       setShowHistory(false)
     }
   }
